@@ -1,0 +1,87 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="startup(evt)">
+    <script>
+    <![CDATA[
+        var svgDocument = null;
+        var O = null;
+        var svgns = 'http://www.w3.org/2000/svg';
+        var xlinkns = 'http://www.w3.org/1999/xlink';
+        var things = new Array("background", "MSG")
+        var finalX = new Array()
+        var finalY = new Array()
+        count = 0
+        function startup(evt) {
+            O = evt.target
+            svgDocument = O.ownerDocument
+            svgRoot = svgDocument.documentElement;
+            OUT = svgDocument.getElementById("outline")
+            for (i in things) {
+                finalX[things[i]] = 0
+                finalY[things[i]] = 0
+                svgDocument.getElementById(things[i]).setAttribute("onmousedown", "trap(evt)")
+            }
+        }
+
+        function trap(evt) {
+            id = evt.currentTarget.id
+            x = evt.clientX;
+            y = evt.clientY;
+            offsetx = x - finalX[id]
+            offsety = y - finalY[id]
+            if (id == "background") {
+                begindraw(id, x, y)
+                O.setAttribute("onmousemove", "drawing(evt,'" + id + "'," + offsetx + "," + offsety + ")")
+            } else {
+                O.setAttribute("onmousemove", "moving(evt,'" + id + "'," + offsetx + "," + offsety + ")")
+            }
+            O.setAttribute("onmouseup", "finishdraw('" + id + "')")
+        }
+
+        function begindraw(id, x, y) {
+            OU = OUT.cloneNode("false")
+            count++
+            OU.setAttribute("id", "O" + count);
+            OU.setAttribute("x", x);
+            OU.setAttribute("y", y);
+            OU.setAttribute("onmousedown", "trap(evt)")
+            svgRoot.appendChild(OU);
+            finalX["O" + count] = 0
+            finalY["O" + count] = 0
+            O.setAttribute("onmousemove", "moving(evt,'" + id + "'," + offsetx + "," + offsety + ")")
+        }
+
+        function moving(e, i, x, y) {
+            o = svgDocument.getElementById(i)
+            o.setAttribute("transform", "translate(" + (e.clientX - x) + " " + (e.clientY - y) + ")")
+            finalX[i] = e.clientX - x
+            finalY[i] = e.clientY - y
+        }
+
+        function drawing(e, i, x, y) {
+            ou = svgDocument.getElementById("O" + count)
+            ex = e.clientX
+            ey = e.clientY
+            dx = ex - x
+            dy = ey - y
+            newx = Math.abs(dx)
+            newy = Math.abs(dy)
+            if (dx < 0) ou.setAttribute("x", ex)
+            ou.setAttribute("width", newx)
+            if (dy < 0) ou.setAttribute("y", ey)
+            ou.setAttribute("height", newy);
+        }
+
+        function finishdraw(i) {
+            O.setAttribute('onmousemove', null)
+            //ou=svgDocument.getElementById("O"+count)
+        }
+    //]]>
+    </script>
+    <defs>
+        <rect id="outline" x="-100" y="-100" height="1" width="1" opacity=".6" fill="yellow" stroke="orange" stroke-width="3" />
+    </defs>
+    <rect id="background" x="0" y="0" height="100%" width="100%" fill="#EEE" />
+    <text id="MSG" x="25" y="40" font-size="20">
+        Interactive SVG: Click and drag to draw rectangles.
+    </text>
+</svg>
+

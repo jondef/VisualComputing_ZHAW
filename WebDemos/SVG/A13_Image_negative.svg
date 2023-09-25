@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <image x="0%" y="00%" width="50%" height="50%" xlink:href="assets/zhaw_tech.jpg" />
+    <filter id="negative" color-interpolation-filters="sRGB">
+        <feComponentTransfer>
+            <feFuncR type="linear" slope="-1" intercept="1" />
+            <feFuncG type="linear" slope="-1" intercept="1" />
+            <feFuncB type="linear" slope="-1" intercept="1" />
+        </feComponentTransfer>
+    </filter>
+    <image x="50%" y="00%" width="50%" height="50%" filter="url(#negative)" xlink:href="assets/zhaw_tech.jpg" />
+</svg>

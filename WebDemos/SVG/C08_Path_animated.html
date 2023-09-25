@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+    </style>
+</head>
+
+<body>
+    <H1>Dynamic SVG using SVG.js JavaScript Library</H1>
+    Animated drawing of paths. Reload HTML page to restart drawing animation.
+    <br>
+    <div id="svg-container" style="background-color:rgb(240,240,240); height:300px;"></div>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+    <br>
+
+    <script type="text/javascript" src="js/svg.js"></script>
+    <script type="text/javascript" src="js/svg.path.js"></script>
+    <script type="text/javascript">
+        // create svg drawing and set viewbox
+        var lineAppearance = {
+                fill: 'none',
+                stroke: '#000',
+                'stroke-width': 2,
+            };
+        var draw = SVG('svg-container').size('100%', '100%');
+        var polyline = draw.path().attr(lineAppearance)
+            .M(100, 200)
+            .L(100, 100)
+            .L(200, 20)
+            .L(300, 100)
+            .v(100)
+            .Z()
+            .drawAnimated();
+        draw.path().attr(lineAppearance)
+            .M(200, 200)
+            .v(-50)
+            .h(40)
+            .v(50)
+            .drawAnimated({duration: 500, easing: '<>', delay: 1300});
+        draw.path().attr(lineAppearance)
+            .M(135, 105)
+            .h(30)
+            .v(30)
+            .h(-30)
+            .Z()
+            .drawAnimated({duration: 500, easing: '<>', delay: 2100});
+        draw.path().attr(lineAppearance)
+            .M(185, 105)
+            .h(30)
+            .v(30)
+            .h(-30)
+            .Z()
+            .drawAnimated({duration: 500, easing: '<>', delay: 2700});
+        draw.path().attr(lineAppearance)
+            .M(235, 105)
+            .h(30)
+            .v(30)
+            .h(-30)
+            .Z()
+            .drawAnimated({duration: 500, easing: '<>', delay: 3500});
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dot3 Bump Mapping</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+	<!-- Shaders -->
+	<script type="x-shader/x-vertex" id="simpleVS">
+
+		varying vec3 vNormal;
+		varying vec2 vUv;
+
+		void main(void)
+		{
+			vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+			gl_Position = projectionMatrix * mvPosition;
+
+			vNormal = normal;
+			vUv = uv;
+
+			// Map to GL
+			vUv.y = 1.0 - uv.y;
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="objNormalsFS">
+
+		varying vec3 vNormal;
+		varying vec2 vUv;
+
+		uniform sampler2D map;
+		uniform sampler2D normalMap;
+
+		// Light direction in object space
+		uniform vec3 lightDirection;
+
+		uniform int useNormals;
+
+		void main(void)
+		{
+			vec4 texelColor = texture2D( map, vUv );
+
+			vec3 L = normalize(-lightDirection);
+			vec3 N;
+			if (useNormals == 0)
+			{
+				N = normalize(vNormal);
+			}
+			else
+			{
+				N = normalize(texture2D(normalMap, vUv).xyz * 2.0 - 1.0);
+			}
+
+			float lit = dot(N, L);
+			gl_FragColor = vec4(texelColor.rgb * lit, 1.0);
+		}
+
+	</script>
+
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/OBJLoader.js "></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(0xeeeeee, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+    		// Assign textures
+    		var albedoMap = new THREE.TextureLoader().load('assets/PlaneMetal.jpg');
+    		var normalMap = new THREE.TextureLoader().load('assets/PlaneNRM_obj.bmp', function (texture) { render(); });
+
+        var mat;
+        var clock = new THREE.Clock();
+
+        var loader = new THREE.OBJLoader();
+        loader.load('assets/Plane.obj', function (geometry) {
+    			mat = new THREE.ShaderMaterial({
+    				uniforms: {
+    					lightDirection: {type: 'v3', value: new THREE.Vector3( -1, -1, -1 ) },
+    					useNormals: {type: 'i', value: 1 },
+
+    					map: {type: 't', value: albedoMap},
+    					normalMap: {type: 't', value: normalMap}
+    				},
+    				vertexShader:   document.getElementById('simpleVS').textContent,
+    				fragmentShader: document.getElementById('objNormalsFS').textContent
+    			});
+
+          geometry.traverse( function(child) {
+            if (child instanceof THREE.Mesh) {
+                    // apply custom material
+                    child.material = mat;
+            }
+          });
+
+          geometry.position.x = 0;
+          geometry.position.y = 0;
+          geometry.position.z = 10;
+          geometry.scale.set(10, 10, 10);
+
+          scene.add(geometry);
+          render();
+        });
+
+         // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+         // position and point the camera to the center of the scene
+        camera.position.x = -35;
+        camera.position.y = 40;
+        camera.position.z = 60;
+        camera.lookAt(scene.position);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = true;
+            this.asWireframes = false;
+			this.useNormals = true;
+        }
+
+        var gui = new dat.GUI({
+            autoPlace: false
+        });
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'asWireframes').onChange(function (e) {
+            asWireframes = e;
+            // TODO: for all material.wireframe = asWireframes;
+            mat.wireframe = asWireframes;
+            render();
+        });
+        gui.open();
+
+         // init and call render function
+        function render() {
+            renderer.render(scene, camera);
+        }
+        initNormals(true);
+        render();
+        setNormals(true);
+
+         // shadow cast on plane
+        function initNormals(value) {
+            if (value) {
+                gui.add(guiControls, 'useNormals').onChange(function (e) {
+
+                    setNormals(e);
+                });
+            }
+        }
+
+        function setNormals(value) {
+            if (value) {
+				      mat.uniforms.useNormals.value = 1;
+            } else {
+				      mat.uniforms.useNormals.value = 0;
+            }
+            render();
+        }
+    </script>
+</body>
+
+</html>

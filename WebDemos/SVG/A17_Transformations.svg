@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240px" height="200px">
+    <svg width="300" height="300" style="border: 1px solid #CCCCCC">
+        <rect width="50" height="20" />
+        <rect width="50" height="20" transform="translate(150 25)"/>
+        <rect width="50" height="20" transform="translate(50 50) scale(2 1) rotate(45 25,5)" />
+        <rect width="50" height="20" transform="rotate(45 25,5) scale(2 1) translate(50 50)" />
+    </svg>
+</svg>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+        .chart div {
+            font: 10px sans-serif;
+            background-color: steelblue;
+            text-align: right;
+            padding: 3px;
+            margin: 1px;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Bar Chart with HTML DIVs</h1>
+    <div class="chart"></div>
+    <script src="js/d3.js"></script>
+    <script>
+        var data = [11, 8, 19, 16, 23, 42];
+
+        var x = d3.scaleLinear()
+            .domain([0, d3.max(data)])
+            .range([0, 420]);
+
+        d3.select(".chart")
+            .selectAll("div")
+            .data(data)
+            .enter().append("div")
+            .style("width", function (d) {
+                return x(d) + "px";
+            })
+            .text(function (d) {
+                return d;
+            });
+    </script>
+    <br>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+</body>
+
+</html>

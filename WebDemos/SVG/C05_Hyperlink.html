@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+    </style>
+</head>
+
+<body>
+    <H1>Dynamic SVG using SVG.js JavaScript Library</H1>
+    Click element to see linked document.
+    <br>
+    <div id="svg-container" style="background-color:rgb(240,240,240); height:300px;"></div>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+    <br>
+
+    <script type="text/javascript" src="js/svg.js"></script>
+    <script type="text/javascript">
+        // create svg drawing and set viewbox
+        var draw = SVG('svg-container').size('100%', '100%');
+        var redBox = draw.rect(160, 160);
+        redBox.fill({
+            color: '#00f',
+            opacity: 1
+        });
+        redBox.move(50, 40);
+        redBox.linkTo('http://svgjs.com');
+
+        var link = draw.link('http://init.zhaw.ch/de/engineering/institute-zentren/init/schwerpunkte/human-information-interaction/visual-computing-lab.html')
+        var rect = link.rect(200, 100);
+        rect.fill({
+            color: '#00f',
+            opacity: 0.05
+        });
+        rect.move(300, 80);
+        link.target('_blank')
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gouraud & Phong Shading Example</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+	<!-- Shaders -->
+	<script type="x-shader/x-vertex" id="gouraudVS">
+
+		// Ambient light colour
+		uniform vec3 ambientLightColor;
+
+		// Point lights
+		struct PointLight {
+
+			// Position of the light
+			vec3 position;
+
+			// Colour of the light
+			vec3 color;
+
+			// Linear attenuation distance
+			float distance;
+		};
+		uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
+
+		// Phong material parameters (requires select phong material)
+		uniform vec3 ambient;
+		uniform vec3 emissive;
+		uniform vec3 diffuse;
+		uniform vec3 specular;
+		uniform float shininess;
+
+		// Final lighted colour of the vertex
+		varying vec3 vertexColour;
+
+		void main(void)
+		{
+			// Normal in view space
+			vec3 normalVS = normalMatrix * normal;
+
+			// Position of the vertex in view space
+			vec4 posVS = modelViewMatrix * vec4(position, 1.0);
+
+			// Direction from the vertex to the eye in view space
+			vec3 eyeDirVS = -normalize(posVS.xyz);
+
+			vec3 accumDiffuseColour = vec3(0.0);
+			vec3 accumSpecularColour = vec3(0.0);
+			for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+			{
+				// Position of the light in view space
+				vec4 lightPosVS = viewMatrix * vec4( pointLights[ i ].position, 1.0 );
+
+				// Light direction from the current vertex to the light
+				vec3 lightDirVS = normalize(lightPosVS.xyz - posVS.xyz);
+
+				// Distance to the light
+				float lightDist = length(lightPosVS.xyz - posVS.xyz);
+
+				// Calculate attenuation
+				float attenuation = 1.0 / (1.0 + (lightDist * pointLights[ i ].distance));
+
+				// Coefficient for diffuse illumination
+				float lambertTerm = dot(lightDirVS, normalVS);
+
+				// Only compute light if the vertex is visible
+				if (lambertTerm > 0.0)
+				{
+					// Compute the diffuse light term
+					accumDiffuseColour += pointLights[ i ].color * diffuse * lambertTerm * attenuation;
+
+					// Compute the specular light term
+					vec3 E = eyeDirVS;
+					vec3 R = reflect(lightDirVS, normalVS);
+					float specular = pow( max(dot(R, E), 0.0), shininess);
+
+					accumSpecularColour += pointLights[ i ].color * specular * attenuation;
+				}
+			}
+
+			// Assign final colour
+			vertexColour = emissive + ambient * ambientLightColor + accumDiffuseColour + accumSpecularColour;
+
+			// Vertex in Screen Space
+			gl_Position = projectionMatrix * posVS;
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="gouraudFS">
+
+		// Final lighted colour of the vertex
+		varying vec3 vertexColour;
+
+		/*******************************************************************************
+		 * Simple colour output
+		 ******************************************************************************/
+		void main(void)
+		{
+			gl_FragColor = vec4(vertexColour, 1.0);
+		}
+
+	</script>
+
+	<script type="x-shader/x-vertex" id="phongVS">
+
+		// Data passed to the fragment shader
+		varying vec4 posVS;
+		varying vec3 normalVS;
+
+		void main(void)
+		{
+			// Normal in view space
+			normalVS = normalMatrix * normal;
+
+			// Position of the vertex in view space
+			posVS = modelViewMatrix * vec4(position, 1.0);
+
+			// Vertex in Screen Space
+			gl_Position = projectionMatrix * posVS;
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="phongFS">
+
+		// Ambient light colour
+		uniform vec3 ambientLightColor;
+
+		// Point lights
+		struct PointLight {
+
+			// Position of the light
+			vec3 position;
+
+			// Colour of the light
+			vec3 color;
+
+			// Linear attenuation distance
+			float distance;
+		};
+		uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
+
+		// Phong material parameters (requires select phong material)
+		uniform vec3 ambient;
+		uniform vec3 emissive;
+		uniform vec3 diffuse;
+		uniform vec3 specular;
+		uniform float shininess;
+
+		// Data passed from the vertex shader
+		varying vec4 posVS;
+		varying vec3 normalVS;
+
+		void main(void)
+		{
+			// Renormalize the normal
+			vec3 normal = normalize(normalVS);
+
+			// Direction from the vertex to the eye in view space
+			vec3 eyeDirVS = -normalize(posVS.xyz);
+
+			vec3 accumDiffuseColour = vec3(0.0);
+			vec3 accumSpecularColour = vec3(0.0);
+			for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+			{
+				// Position of the light in view space
+				vec4 lightPosVS = viewMatrix * vec4( pointLights[ i ].position, 1.0 );
+
+				// Light direction from the current vertex to the light
+				vec3 lightDirVS = normalize(lightPosVS.xyz - posVS.xyz);
+
+				// Distance to the light
+				float lightDist = length(lightPosVS.xyz - posVS.xyz);
+
+				// Calculate attenuation
+				float attenuation = 1.0 / (1.0 + (lightDist * pointLights[ i ].distance));
+
+				// Coefficient for diffuse illumination
+				float lambertTerm = dot(lightDirVS, normal);
+
+				// Only compute light if the vertex is visible
+				if (lambertTerm > 0.0)
+				{
+					// Compute the diffuse light term
+					accumDiffuseColour += pointLights[ i ].color * diffuse * lambertTerm * attenuation;
+
+					// Compute the specular light term
+					vec3 E = eyeDirVS;
+					vec3 R = reflect(lightDirVS, normal);
+					float specular = pow( max(dot(R, E), 0.0), shininess);
+
+					accumSpecularColour += pointLights[ i ].color * specular * attenuation;
+				}
+			}
+
+			// Assign final colour
+			gl_FragColor.rgb = emissive + ambient * ambientLightColor + accumDiffuseColour + accumSpecularColour;
+			gl_FragColor.a = 1.0;
+		}
+	</script>
+
+	<script type="x-shader/x-vertex" id="blinnPhongVS">
+
+		// Data passed to the fragment shader
+		varying vec4 posVS;
+		varying vec3 normalVS;
+
+		void main(void)
+		{
+			// Normal in view space
+			normalVS = normalMatrix * normal;
+
+			// Position of the vertex in view space
+			posVS = modelViewMatrix * vec4(position, 1.0);
+
+			// Vertex in Screen Space
+			gl_Position = projectionMatrix * posVS;
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="blinnPhongFS">
+
+		// Ambient light colour
+		uniform vec3 ambientLightColor;
+
+		// Point lights
+		struct PointLight {
+
+			// Position of the light
+			vec3 position;
+
+			// Colour of the light
+			vec3 color;
+
+			// Linear attenuation distance
+			float distance;
+		};
+		uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
+
+		// Phong material parameters (requires select phong material)
+		uniform vec3 ambient;
+		uniform vec3 emissive;
+		uniform vec3 diffuse;
+		uniform vec3 specular;
+		uniform float shininess;
+
+		// Data passed from the vertex shader
+		varying vec4 posVS;
+		varying vec3 normalVS;
+
+		void main(void)
+		{
+			// Renormalize the normal
+			vec3 normal = normalize(normalVS);
+
+			// Direction from the vertex to the eye in view space
+			vec3 eyeDirVS = -normalize(posVS.xyz);
+
+			vec3 accumDiffuseColour = vec3(0.0);
+			vec3 accumSpecularColour = vec3(0.0);
+			for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+			{
+				// Position of the light in view space
+				vec4 lightPosVS = viewMatrix * vec4( pointLights[ i ].position, 1.0 );
+
+				// Light direction from the current vertex to the light
+				vec3 lightDirVS = normalize(lightPosVS.xyz - posVS.xyz);
+
+				// Distance to the light
+				float lightDist = length(lightPosVS.xyz - posVS.xyz);
+
+				// Calculate attenuation
+				float attenuation = 1.0 / (1.0 + (lightDist * pointLights[ i ].distance));
+
+				// Coefficient for diffuse illumination
+				float lambertTerm = dot(lightDirVS, normal);
+
+				// Only compute light if the vertex is visible
+				if (lambertTerm > 0.0)
+				{
+					// Compute the diffuse light term
+					accumDiffuseColour += pointLights[ i ].color * diffuse * lambertTerm * attenuation;
+
+					// Compute the specular light term
+					vec3 E = eyeDirVS;
+					vec3 H = normalize(lightDirVS + E);
+					float specular = pow( max(dot(H, normal), 0.0), shininess);
+
+					accumSpecularColour += pointLights[ i ].color * specular * attenuation;
+				}
+			}
+
+			// Assign final colour
+			gl_FragColor.rgb = emissive + ambient * ambientLightColor + accumDiffuseColour + accumSpecularColour;
+			gl_FragColor.a = 1.0;
+		}
+	</script>
+
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/OBJLoader.js "></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+
+	<script src="assets/glow/js/postprocessing/EffectComposer.js"></script>
+	<script src="assets/glow/js/postprocessing/RenderPass.js"></script>
+	<script src="assets/glow/js/postprocessing/ShaderPass.js"></script>
+
+
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+		var torusCoarseGouraud, torusFineGouraud;
+		var torusCoarsePhong, torusFinePhong;
+		var torusCoarseBlinnPhong, torusFineBlinnPhong;
+		var currentModel;
+
+        renderer.setClearColor(0x777777, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        var grid = new THREE.GridHelper(80, 80);
+
+         // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -0.05;
+        plane.position.z = 0;
+
+        // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+		// Additional uniforms
+        var uniforms = {
+
+			// Copy from three.js
+			"ambientLightColor" : { type: "fv", value: [] },
+
+			"directionalLights" : { type: "fv", value: [] },
+			"rectAreaLights" : { type: "fv", value: [] },
+			"hemisphereLights" : { type: "fv", value: [] },
+			"pointLights" : { type: "fv", value: [] },
+			"spotLights" : { type: "fv", value: [] },
+
+			"directionalShadowMap" : { type: "fv", value: [] },
+			"directionalShadowMatrix" : { type: "fv", value: [] },
+			"spotShadowMap" : { type: "fv", value: [] },
+			"spotShadowMatrix" : { type: "fv", value: [] },
+			"pointShadowMap" : { type: "fv", value: [] },
+			"pointShadowMatrix" : { type: "fv", value: [] },
+
+			ambient: {
+                type: "v3",
+                value: new THREE.Vector3(1.0, 1.0, 1.0)
+            },
+			emissive: {
+                type: "v3",
+                value: new THREE.Vector3(0.0, 0.0, 0.0)
+            },
+			diffuse: {
+                type: "v3",
+                value: new THREE.Vector3(1.0, 1.0, 1.0)
+            },
+			specular: {
+                type: "v3",
+                value: new THREE.Vector3(1.0, 1.0, 1.0)
+            },
+			shininess: {
+                type: "f",
+                value: 1.0
+            }
+        };
+
+        var gouraudShaderMaterial = new THREE.ShaderMaterial({
+
+			lights: true,
+
+            uniforms: uniforms,
+            vertexShader: document.getElementById('gouraudVS').textContent,
+            fragmentShader: document.getElementById('gouraudFS').textContent
+        });
+
+        var phongShaderMaterial = new THREE.ShaderMaterial({
+
+			lights: true,
+
+            uniforms: uniforms,
+            vertexShader: document.getElementById('phongVS').textContent,
+            fragmentShader: document.getElementById('phongFS').textContent
+        });
+
+        var blinnPhongShaderMaterial = new THREE.ShaderMaterial({
+
+			lights: true,
+
+            uniforms: uniforms,
+            vertexShader: document.getElementById('blinnPhongVS').textContent,
+            fragmentShader: document.getElementById('blinnPhongFS').textContent
+        });
+
+        torusCoarseGouraud = new THREE.Mesh(new THREE.TorusGeometry(2, 0.5, 32, 50), gouraudShaderMaterial);
+        torusCoarseGouraud.position.set(0, 0, 0);
+
+        torusFineGouraud = new THREE.Mesh(new THREE.TorusGeometry(2, 0.5, 128, 200), gouraudShaderMaterial);
+        torusFineGouraud.position.set(0, 0, 0);
+
+        torusCoarsePhong = new THREE.Mesh(new THREE.TorusGeometry(2, 0.5, 32, 50), phongShaderMaterial);
+        torusCoarsePhong.position.set(0, 0, 0);
+
+        torusFinePhong = new THREE.Mesh(new THREE.TorusGeometry(2, 0.5, 128, 200), phongShaderMaterial);
+        torusFinePhong.position.set(0, 0, 0);
+
+        torusCoarseBlinnPhong = new THREE.Mesh(new THREE.TorusGeometry(2, 0.5, 32, 50), blinnPhongShaderMaterial);
+        torusCoarseBlinnPhong.position.set(0, 0, 0);
+
+        torusFineBlinnPhong = new THREE.Mesh(new THREE.TorusGeometry(2, 0.5, 128, 200), blinnPhongShaderMaterial);
+        torusFineBlinnPhong.position.set(0, 0, 0);
+
+		currentModel = torusCoarseGouraud;
+		scene.add(currentModel);
+
+        // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+		// position and point the camera to the center of the scene
+        camera.position.x = -5;
+        camera.position.y = 7;
+        camera.position.z = 10;
+        camera.lookAt(scene.position);
+
+        // add subtle ambient lighting
+       var ambientLight = new THREE.AmbientLight(0x98ADC5, 0.40);
+       scene.add(ambientLight);
+
+        // Add point light
+        var pointLight = new THREE.PointLight(0xFFFFFF, 0.7);
+    		pointLight.position.set(10.0, 5.0, 7.0);
+        scene.add(pointLight);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = true;
+            this.showGrid = false;
+            this.showPlane = false;
+            this.asWireframes = false;
+      			this.useModel = 'coarse'
+      			this.useMode = 'gouraud'
+        }
+
+        var gui = new dat.GUI({
+            autoPlace: false
+        });
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            guiControls.showAxes = e;
+            if (guiControls.showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showGrid').onChange(function (e) {
+            guiControls.showGrid = e;
+            if (guiControls.showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showPlane').onChange(function (e) {
+            guiControls.showPlane = e;
+            if (guiControls.showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+        gui.add(guiControls, 'asWireframes').onChange(function (e) {
+            guiControls.asWireframes = e;
+
+            gouraudShaderMaterial.wireframe = guiControls.asWireframes;
+            phongShaderMaterial.wireframe = guiControls.asWireframes;
+            blinnPhongShaderMaterial.wireframe = guiControls.asWireframes;
+            render();
+        });
+        gui.add(guiControls, 'useModel', ['coarse', 'fine']).onChange(function (e) {
+
+			guiControls.useModel = e;
+			scene.remove(currentModel);
+
+			if ( e == 'coarse' ) {
+				if ( guiControls.useMode == 'gouraud' ) {
+					currentModel = torusCoarseGouraud;
+				} else if ( guiControls.useMode == 'phong' ) {
+					currentModel = torusCoarsePhong;
+				} else if ( guiControls.useMode == 'blinn-phong' ) {
+					currentModel = torusCoarseBlinnPhong;
+				}
+			} else if ( e == 'fine' ) {
+				if ( guiControls.useMode == 'gouraud' ) {
+					currentModel = torusFineGouraud;
+				} else if ( guiControls.useMode == 'phong' ) {
+					currentModel = torusFinePhong;
+				} else if ( guiControls.useMode == 'blinn-phong' ) {
+					currentModel = torusFineBlinnPhong;
+				}
+			}
+
+			scene.add(currentModel);
+            render();
+        });
+        gui.add(guiControls, 'useMode', ['gouraud', 'phong', 'blinn-phong']).onChange(function (e) {
+
+			guiControls.useMode = e;
+			scene.remove(currentModel)
+
+			if ( e == 'gouraud' ) {
+				if ( guiControls.useModel == 'coarse' ) {
+					currentModel = torusCoarseGouraud;
+				} else if ( guiControls.useModel == 'fine' ) {
+					currentModel = torusFineGouraud;
+				}
+			} else if ( e == 'phong' ) {
+				if ( guiControls.useModel == 'coarse' ) {
+					currentModel = torusCoarsePhong;
+				} else if ( guiControls.useModel == 'fine' ) {
+					currentModel = torusFinePhong;
+				}
+			} else if ( e == 'blinn-phong' ) {
+				if ( guiControls.useModel == 'coarse' ) {
+					currentModel = torusCoarseBlinnPhong;
+				} else if ( guiControls.useModel == 'fine' ) {
+					currentModel = torusFineBlinnPhong;
+				}
+			}
+
+			scene.add(currentModel);
+            render();
+        });
+
+         // init and call render function
+        function render() {
+
+            renderer.render(scene, camera);
+        }
+        render();
+
+    </script>
+</body>
+
+</html>

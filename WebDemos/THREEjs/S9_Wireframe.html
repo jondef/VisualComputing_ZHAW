@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Solid Wireframe Example</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+	<!-- Shaders -->
+	<script type="x-shader/x-vertex" id="wireframeVS">
+                
+		varying vec3 vViewPosition;
+		varying vec2 vUv;
+		
+		void main(void)
+		{
+			vUv = uv;
+			
+			vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+			vViewPosition = mvPosition.xyz;
+			
+			gl_Position = projectionMatrix * mvPosition;
+		}
+		
+	</script>
+	
+	<script type="x-shader/x-fragment" id="wireframeFS">
+    
+        #extension GL_OES_standard_derivatives : require
+        
+		varying vec3 vViewPosition;
+		varying vec2 vUv;
+		
+		float evalDiffuse(vec3 normal)
+		{
+			float spotDiffuse = 0.0;
+           
+			for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {
+         
+				vec3 spotLightPosition = vec3(32, 14, -9);
+				vec4 lPosition = viewMatrix * vec4( spotLightPosition, 1.0 );
+				vec3 spotVector = -normalize( lPosition.xyz + vViewPosition.xyz );
+           
+				// diffuse
+				float spotDiffuseWeight = max( dot( normal, spotVector ), 0.0 );	   
+				spotDiffuse += spotDiffuseWeight;
+			}
+		
+			return spotDiffuse;
+		}
+		
+		void main(void)
+		{
+            vec3 normal = normalize( cross(dFdx(vViewPosition), dFdy(vViewPosition)) );
+			float albedo = evalDiffuse(normal);
+ 
+            vec3 baryc;
+            baryc.xy = vUv;
+            baryc.z = 1.0 - vUv.x - vUv.y;
+            
+            int method = 3;
+            if (method == 0)
+            {
+                float min_baryc = min(baryc.x, min(baryc.y, baryc.z));
+                albedo *= min_baryc;
+            }
+
+            if (method == 1)
+            {
+                float min_baryc = min(baryc.x, min(baryc.y, baryc.z));
+                min_baryc = smoothstep(0.0, 0.1, min_baryc);
+                albedo *= min_baryc;
+            }
+
+            if (method == 2)
+            {
+                float min_baryc = min(baryc.x, min(baryc.y, baryc.z));
+                float delta = fwidth(min_baryc);
+                min_baryc = smoothstep(0.0, delta, min_baryc);
+                albedo *= min_baryc;
+            }
+
+            if (method == 3)
+            {
+                vec3 deltas = fwidth(baryc);
+                baryc = smoothstep(deltas, 2.0 * deltas, baryc);
+                float min_baryc = min(baryc.x, min(baryc.y, baryc.z));
+                albedo *= min_baryc;
+            }
+
+			gl_FragColor = vec4(albedo, albedo, albedo, 1.0);
+		}
+	
+	</script>
+	
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/OBJLoader.js "></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+	
+	<script src="js/postprocessing/EffectComposer.js"></script>
+	<script src="js/postprocessing/RenderPass.js"></script>
+	<script src="js/postprocessing/ShaderPass.js"></script>
+
+	
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer();
+
+        renderer.setClearColor(0xeeeeee, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        var grid = new THREE.GridHelper(40, 1);
+
+         // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -0.05;
+        plane.position.z = 0;
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+		// Load textures
+		var mat = new THREE.ShaderMaterial({
+			uniforms: {
+			},
+		
+			vertexShader:   document.getElementById('wireframeVS').textContent,
+			fragmentShader: document.getElementById('wireframeFS').textContent
+		});
+        var torusKnot = new THREE.TorusKnotGeometry( 10, 3, 80, 16, 1, 3 );
+        var torus_p = torusKnot.vertices;
+        var torus_f = torusKnot.faces;
+        var unfolded_vertices = new Float32Array(9 * torus_f.length);
+        var unfolded_baryc = new Float32Array(6 * torus_f.length);
+        for (i = 0; i < torus_f.length; i++) {
+            var face = torus_f[i];
+            unfolded_vertices[9*i+0] = torus_p[face.a].x;
+            unfolded_vertices[9*i+1] = torus_p[face.a].y;
+            unfolded_vertices[9*i+2] = torus_p[face.a].z;
+            unfolded_vertices[9*i+3] = torus_p[face.b].x;
+            unfolded_vertices[9*i+4] = torus_p[face.b].y;
+            unfolded_vertices[9*i+5] = torus_p[face.b].z;
+            unfolded_vertices[9*i+6] = torus_p[face.c].x;
+            unfolded_vertices[9*i+7] = torus_p[face.c].y;
+            unfolded_vertices[9*i+8] = torus_p[face.c].z;
+            unfolded_baryc[6*i+0] = 1
+            unfolded_baryc[6*i+1] = 0
+            unfolded_baryc[6*i+2] = 0
+            unfolded_baryc[6*i+3] = 1
+            unfolded_baryc[6*i+4] = 0
+            unfolded_baryc[6*i+5] = 0
+        }
+
+
+        var unfolded_geometry = new THREE.BufferGeometry();
+        unfolded_geometry.addAttribute( 'position', new THREE.BufferAttribute( unfolded_vertices, 3 ) );
+        unfolded_geometry.addAttribute( 'uv', new THREE.BufferAttribute( unfolded_baryc, 2 ) );
+
+		var mesh = new THREE.Mesh( unfolded_geometry, mat );
+        scene.add(mesh);
+		
+         // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+         // position and point the camera to the center of the scene
+        camera.position.x = -20;
+        camera.position.y = 28;
+        camera.position.z = 40;
+        camera.lookAt(scene.position);
+
+         // add spotlight
+        var spotLight = new THREE.SpotLight(0xaaaaaa);
+        scene.add(spotLight);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = true;
+            this.showGrid = false;
+            this.showPlane = false;
+            this.asWireframes = false;
+        }
+
+        var gui = new dat.GUI({
+            autoPlace: false
+        });
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showGrid').onChange(function (e) {
+            showGrid = e;
+            if (showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showPlane').onChange(function (e) {
+            showPlane = e;
+            if (showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+        gui.close();
+
+         // init and call render function
+        function render() {
+            renderer.render(scene, camera);
+        }
+        render();
+
+    </script>
+</body>
+
+</html>

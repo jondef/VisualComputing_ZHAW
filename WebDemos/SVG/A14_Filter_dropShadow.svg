@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <filter id="dropShadow">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+        <feOffset dx="3" dy="5" />
+        <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+        </feMerge>
+    </filter>
+    <text x="100" y="120" font-size="140" filter="url(#dropShadow)">SVG</text>
+    <rect x="25" y="150" width="100" height="75" fill="red" filter="url(#dropShadow)" />
+    <polygon points="170,200 230,140 320,230" fill="green" filter="url(#dropShadow)" />
+    <circle cx="400" cy="185" r="50" fill="blue" filter="url(#dropShadow)" />
+</svg>

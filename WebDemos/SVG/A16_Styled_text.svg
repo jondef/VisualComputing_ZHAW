@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340px" height="240px">
+  <text x="20"  y="40"
+        transform="rotate(30 20,40)"
+        style="font-family: Times New Roman;
+               font-size  : 48;
+               stroke     : #ff0000;
+               fill       : #ffbb00;">
+    SVG Text Styling
+  </text>
+</svg>

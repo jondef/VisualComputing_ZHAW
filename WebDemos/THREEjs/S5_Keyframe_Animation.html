@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Keyframe Animation Example</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+	<!-- Shaders -->
+	<script type="x-shader/x-vertex" id="morphShaderVS">
+
+		//attribute vec3 morphTarget0;
+		//attribute vec3 morphTarget1;
+		//attribute vec3 morphTarget2;
+		//attribute vec3 morphTarget3;
+
+		varying vec3 vViewPosition;
+		varying vec3 vNormal;
+
+		uniform float morphTargetInfluences[ 8 ];
+
+		void main(void)
+		{
+			float maxInfluence = 0.0;
+			vec3 morphed = vec3( 0.0 );
+
+			if (morphTargetInfluences[ 0 ] > maxInfluence) { morphed = ( morphTarget0 - position ) * morphTargetInfluences[ 0 ]; maxInfluence = morphTargetInfluences[ 0 ]; }
+			if (morphTargetInfluences[ 1 ] > maxInfluence) { morphed = ( morphTarget1 - position ) * morphTargetInfluences[ 1 ]; maxInfluence = morphTargetInfluences[ 1 ]; }
+			if (morphTargetInfluences[ 2 ] > maxInfluence) { morphed = ( morphTarget2 - position ) * morphTargetInfluences[ 2 ]; maxInfluence = morphTargetInfluences[ 2 ]; }
+			if (morphTargetInfluences[ 3 ] > maxInfluence) { morphed = ( morphTarget3 - position ) * morphTargetInfluences[ 3 ]; maxInfluence = morphTargetInfluences[ 3 ]; }
+			if (morphTargetInfluences[ 4 ] > maxInfluence) { morphed = ( morphTarget4 - position ) * morphTargetInfluences[ 4 ]; maxInfluence = morphTargetInfluences[ 4 ]; }
+			if (morphTargetInfluences[ 5 ] > maxInfluence) { morphed = ( morphTarget5 - position ) * morphTargetInfluences[ 5 ]; maxInfluence = morphTargetInfluences[ 5 ]; }
+			if (morphTargetInfluences[ 6 ] > maxInfluence) { morphed = ( morphTarget6 - position ) * morphTargetInfluences[ 6 ]; maxInfluence = morphTargetInfluences[ 6 ]; }
+			if (morphTargetInfluences[ 7 ] > maxInfluence) { morphed = ( morphTarget7 - position ) * morphTargetInfluences[ 7 ]; maxInfluence = morphTargetInfluences[ 7 ]; }
+
+			morphed += position;
+			vec4 mvPosition = modelViewMatrix * vec4(morphed, 1.0);
+			vViewPosition = mvPosition.xyz;
+
+			gl_Position = projectionMatrix * mvPosition;
+
+			vNormal = normalize( normalMatrix * normal );
+		}
+
+	</script>
+
+	<script type="x-shader/x-vertex" id="morphSmoothShaderVS">
+
+		varying vec3 vViewPosition;
+		varying vec3 vNormal;
+
+		uniform float morphTargetInfluences[ 8 ];
+
+		void main(void)
+		{
+			vec3 morphed = vec3( 0.0 );
+			morphed += ( morphTarget0 - position ) * morphTargetInfluences[ 0 ];
+			morphed += ( morphTarget1 - position ) * morphTargetInfluences[ 1 ];
+			morphed += ( morphTarget2 - position ) * morphTargetInfluences[ 2 ];
+			morphed += ( morphTarget3 - position ) * morphTargetInfluences[ 3 ];
+
+			morphed += ( morphTarget4 - position ) * morphTargetInfluences[ 4 ];
+			morphed += ( morphTarget5 - position ) * morphTargetInfluences[ 5 ];
+			morphed += ( morphTarget6 - position ) * morphTargetInfluences[ 6 ];
+			morphed += ( morphTarget7 - position ) * morphTargetInfluences[ 7 ];
+
+			morphed += position;
+			vec4 mvPosition = modelViewMatrix * vec4(morphed, 1.0);
+			vViewPosition = mvPosition.xyz;
+
+			gl_Position = projectionMatrix * mvPosition;
+
+			vNormal = normalize( normalMatrix * normal );
+		}
+
+	</script>
+
+	<script type="x-shader/x-vertex" id="morphNormalShaderVS">
+
+		varying vec3 vViewPosition;
+		varying vec3 vNormal;
+
+		uniform float morphTargetInfluences[ 4 ];
+
+		void main(void)
+		{
+			vec3 morphed = vec3( 0.0 );
+			morphed += ( morphTarget0 - position ) * morphTargetInfluences[ 0 ];
+			morphed += ( morphTarget1 - position ) * morphTargetInfluences[ 1 ];
+			morphed += ( morphTarget2 - position ) * morphTargetInfluences[ 2 ];
+			morphed += ( morphTarget3 - position ) * morphTargetInfluences[ 3 ];
+
+			morphed += position;
+			vec4 mvPosition = modelViewMatrix * vec4(morphed, 1.0);
+			vViewPosition = mvPosition.xyz;
+
+			gl_Position = projectionMatrix * mvPosition;
+
+			vec3 morphedNormal = vec3( 0.0 );
+			morphedNormal += ( morphNormal0 - normal ) * morphTargetInfluences[ 0 ];
+			morphedNormal += ( morphNormal1 - normal ) * morphTargetInfluences[ 1 ];
+			morphedNormal += ( morphNormal2 - normal ) * morphTargetInfluences[ 2 ];
+			morphedNormal += ( morphNormal3 - normal ) * morphTargetInfluences[ 3 ];
+
+			morphedNormal += normal;
+
+			vNormal = normalize( normalMatrix * morphedNormal );
+		}
+
+	</script>
+	<script type="x-shader/x-fragment" id="morphShaderFS">
+
+		varying vec3 vViewPosition;
+		varying vec3 vNormal;
+
+		void main(void)
+		{
+			vec3 normal = normalize(vNormal);
+			float s = dot(normalize(-vViewPosition), 0.5*normal+0.5);
+			if (s > 0.75)
+				gl_FragColor = 0.75 * vec4(1.0,1.0,1.0,1.0);
+			else
+				gl_FragColor = 0.25 * vec4(1.0,1.0,1.0,1.0);
+		}
+
+	</script>
+
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/ColladaLoader.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(0xeeeeee, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        var grid = new THREE.GridHelper(80, 80);
+
+         // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -0.05;
+        plane.position.z = 0;
+        scene.add(plane);
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+        var mesh;
+        var meshAnim;
+        var mat, matAnimSmooth, matAnimNormal;
+        var mixer;
+        var frames = [];
+        var currentMesh;
+        var clock = new THREE.Clock();
+
+        var loader = new THREE.JSONLoader();
+        loader.load('assets/horse.json', function (geometry) {
+
+            mat = new THREE.MeshLambertMaterial({
+                color: 0xffffff,
+                vertexColors: THREE.FaceColors
+            });
+
+		        matAnimSmooth = new THREE.ShaderMaterial({
+              morphTargets: true,
+      				vertexShader: document.getElementById('morphSmoothShaderVS').textContent,
+      				fragmentShader: document.getElementById('morphShaderFS').textContent
+      			});
+
+      			matAnimNormal = new THREE.ShaderMaterial({
+              morphTargets: true,
+      				vertexShader: document.getElementById('morphNormalShaderVS').textContent,
+      				fragmentShader: document.getElementById('morphShaderFS').textContent
+      			});
+
+            // Static, keyframe horse
+            mesh = new THREE.Mesh(geometry, mat);
+            mesh.position.x = 12;
+            mesh.position.z = 0;
+            mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.1;
+            frames.push(mesh);
+            currentMesh = mesh;
+
+            mesh.geometry.morphTargets.forEach(function (e) {
+                var geom = new THREE.Geometry();
+                geom.vertices = e.vertices;
+                geom.faces = geometry.faces;
+                var morphMesh = new THREE.Mesh(geom, mat);
+                frames.push(morphMesh);
+            });
+
+            // Animated, spinning horse
+            meshAnim = new THREE.Mesh(geometry, matAnimSmooth);
+            meshAnim.scale.x = meshAnim.scale.y = meshAnim.scale.z = 0.1;
+            meshAnim.position.x = -15;
+            meshAnim.position.z = 13;
+            mixer = new THREE.AnimationMixer(meshAnim);
+            var clip = THREE.AnimationClip.CreateFromMorphTargetSequence( 'gallop', geometry.morphTargets, 30 );
+            mixer.clipAction( clip ).setDuration(1).play();
+
+            // Make the horses look more natural (less faceted)
+            geometry.computeVertexNormals();
+            geometry.computeFaceNormals();
+            geometry.computeMorphNormals();
+
+            scene.add(meshAnim);
+            showFrame(0);
+        });
+
+        function showFrame(e) {
+            scene.remove(currentMesh);
+            scene.add(frames[e]);
+            currentMesh = frames[e];
+            currentMesh.position.x = 12;
+            currentMesh.position.z = 0;
+            currentMesh.scale.x = currentMesh.scale.y = currentMesh.scale.z = 0.1;
+            render();
+        }
+
+         // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+         // position and point the camera to the center of the scene
+        camera.position.x = -35;
+        camera.position.y = 40;
+        camera.position.z = 60;
+        camera.lookAt(scene.position);
+
+         // add subtle ambient lighting
+        var ambientLight = new THREE.AmbientLight(0x222222);
+        scene.add(ambientLight);
+
+         // add spotlight
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(-80, 70, 90);
+        scene.add(spotLight);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = true;
+            this.showGrid = false;
+            this.showPlane = true;
+            this.asWireframes = false;
+            this.animated = true;
+            this.withShadow = false;
+            this.withFog = false;
+            this.keyframe = 1;
+        }
+
+        var gui = new dat.GUI({
+            autoPlace: false
+        });
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showGrid').onChange(function (e) {
+            showGrid = e;
+            if (showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showPlane').onChange(function (e) {
+            showPlane = e;
+            if (showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+        gui.add(guiControls, 'asWireframes').onChange(function (e) {
+            asWireframes = e;
+            // TODO: for all material.wireframe = asWireframes;
+            mat.wireframe = asWireframes;
+            matAnimSmooth.wireframe = asWireframes;
+            matAnimNormal.wireframe = asWireframes;
+            render();
+        });
+        gui.add(guiControls, "keyframe", 1, 15).step(1).onChange(function (e) {
+            showFrame(e);
+        });
+        gui.open();
+
+         // init and call render function
+        function render() {
+            renderer.render(scene, camera);
+        }
+        initAnim(true);
+        initShadow(false);
+        initFog(false);
+        render();
+        setShadow(false);
+        setFog(false);
+        animate();
+
+         // animate the 3D objects
+        function initAnim(value) {
+            if (value) {
+                gui.add(guiControls, 'animated').onChange(function (e) {
+                    animated = e;
+                    if (animated) animate();
+                });
+            }
+        }
+
+        var step = 0;
+        var scalingStep = 0;
+
+        function animate() {
+            if (guiControls.animated) {
+                // DO ANIMATING 3D ELEMENTS
+                if (meshAnim) {
+                    meshAnim.rotation.y += 0.01;
+                }
+                if ( mixer !== undefined ) {
+                    mixer.update(clock.getDelta());
+                }
+                // request re-rendering
+                requestAnimationFrame(animate);
+            }
+            render();
+        }
+
+         // shadow cast on plane
+        function initShadow(value) {
+            // SET receiveShadow AND castShadow FLAGS OF 3D ELEMENTS WITH SHADOW
+            plane.receiveShadow = value;
+            spotLight.castShadow = value;
+            spotLight.shadow.mapSize.width = 2048;
+            spotLight.shadow.mapSize.height = 2048;
+            renderer.shadowMap.enabled = value;
+            if (value) {
+                gui.add(guiControls, 'withShadow').onChange(function (e) {
+                    withShadow = e;
+                    setShadow(withShadow);
+                });
+            }
+        }
+
+        function setShadow(value) {
+            if (value) {
+                renderer.shadowMap.autoUpdate = true;
+            } else {
+                renderer.shadowMap.autoUpdate = false;
+                renderer.clearTarget(spotLight.shadow.map);
+            }
+            render();
+        }
+
+         // fog
+        var fog;
+
+        function initFog(value) {
+            if (value) {
+                fog = new THREE.Fog(0xeeeeee, 0.0000001, 150);
+                scene.fog = fog;
+                gui.add(guiControls, 'withFog').onChange(function (e) {
+                    withFog = e;
+                    setFog(withFog);
+                });
+            }
+        }
+
+        function setFog(value) {
+            if (!fog) return;
+            if (value) {
+                fog.near = 0.000000001;
+                fog.far = 150;
+            } else {
+                fog.near = 8000;
+                fog.far = 8000;
+            }
+            render();
+        }
+    </script>
+</body>
+
+</html>

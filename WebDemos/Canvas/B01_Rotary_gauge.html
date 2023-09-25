@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+    </style>
+
+
+    <body>
+        <H1>HTML5 Canvas: Rotary gauge</H1>
+        <canvas id="canvas"></canvas>
+        <br>
+        <label>Intensity:</label>
+        <input type=range min=0 max=1000 value=600 id=fader step=1 onchange="update(value)">
+        <script src="js/gauge.min.js"></script>
+        <script>
+            var opts = {
+                pointer: {
+                    length: 0.8, // The radius of the inner circle
+                    strokeWidth: 0.05, // The rotation offset
+                    color: '#0000ff' // Fill color
+                },
+                colorStart: '#6FADCF', // Colors
+            };
+            var canvas = document.getElementById('canvas');
+            var gauge = new Gauge(canvas).setOptions(opts);
+            gauge.maxValue = 1000;
+            gauge.animationSpeed = 32; // set animation speed (32 is default value)
+            gauge.set(600); // set actual value;
+
+            function update(val) {
+                gauge.set(parseInt(val));
+            }
+        </script>
+        <br>
+        <br>
+        <br>Uses the  <a href='http://jquer.in/random-jquery-plugins-for-superior-websites/gauge-js/'>gauge.js</a> library. 
+        <br>
+        <br>Example of CGR Computer Graphics course at ZHAW.
+    </body>
+
+</html>

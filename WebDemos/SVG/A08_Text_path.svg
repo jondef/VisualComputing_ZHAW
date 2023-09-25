@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <path d="M 25 100 C 200 40 300 250 550 50" stroke="red" stroke-width="5" fill="none" />
+    <defs>
+        <path id="curve" d="M 25 200 C 200 140 300 350 550 150" stroke="blue" fill="none" stroke-width="5" />
+    </defs>
+    <text id="T" font-family="arial" font-size="20">
+        <textPath xlink:href="#curve">
+            Visual Computing Lab at InIT of ZHAW School of Engineering
+        </textPath>
+    </text>
+</svg>

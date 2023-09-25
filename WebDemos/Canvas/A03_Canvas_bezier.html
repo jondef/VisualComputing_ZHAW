@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+    </style>
+</head>
+
+<body>
+    <H1>HTML5 Canvas: Bezier curves</H1>
+    here we go ...
+    <br>
+    <canvas id="myCanvas" width="480" height="200"></canvas>
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+
+         // custom shape
+        context.beginPath();
+        context.moveTo(170, 80);
+        context.bezierCurveTo(130, 100, 130, 150, 230, 150);
+        context.bezierCurveTo(250, 180, 320, 180, 340, 150);
+        context.bezierCurveTo(420, 150, 420, 120, 390, 100);
+        context.bezierCurveTo(430, 40, 370, 30, 340, 50);
+        context.bezierCurveTo(320, 5, 250, 20, 250, 50);
+        context.bezierCurveTo(200, 5, 150, 20, 170, 80);
+        context.closePath();
+        context.lineWidth = 5;
+        context.fillStyle = '#88DDFF';
+        context.fill();
+        context.strokeStyle = 'blue';
+        context.stroke();
+    </script>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+</body>
+
+</html>

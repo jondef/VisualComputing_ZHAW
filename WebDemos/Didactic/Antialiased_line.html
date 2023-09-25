@@ -1,0 +1,62 @@
+<html>
+
+<head>
+    <!-- (c) Wojciech Mula; extended by Philipp Ackermann -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Xiaolin Wu's Algorithm Demo - anti-aliased line drawing</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+            margin: 10px;
+            padding: 0;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        div {
+            position: absolute;
+            top: 10;
+            left: 420;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="draw" width="400" height="400"></canvas>
+    <script type="text/javascript" src="js/bresenham.js"></script>
+    <script type="text/javascript" src="js/bresenham-demo.js"></script>
+    <script type="text/javascript">
+        var canvas = document.getElementById('draw');
+        var ctx = canvas.getContext('2d');
+        canvas.onclick = aa_line_edit;
+        update_aa_line_view();
+    </script>
+
+    <div>
+        <b>Anti-aliased line drawing by Wu's algorithm</b>
+        <br>
+        <br>Click into grid view to define line.
+        <br>
+        <br>
+        <br>
+        <em>See also</em>
+        <ul>
+            <li><a href="Bresenham_line.html">line drawing with aliasing</a>
+            </li>
+            <li><a href="Bresenham_circle.html">circle drawing</a>
+            </li>
+            <li><a href="Bresenham_ellipse.html">ellipse drawing</a>
+            </li>
+        </ul>
+        <br>
+        <em>Source Code</em>
+        <ul>
+            <li><a href="js/bresenham.js">bresenham.js</a> &mdash; algorithms</li>
+        </ul>
+    </div>
+
+</body>
+
+</html>
+

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+    </style>
+</head>
+
+<body>
+    <H1>Dynamic SVG using SVG.js JavaScript Library</H1>
+    Looped Animation.
+    <br>
+    <div id="svg-container" style="background-color:rgb(240,240,240); height:300px;"></div>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+    <br>
+
+    <script type="text/javascript" src="js/svg.js"></script>
+    <script type="text/javascript">
+        // create svg drawing and set viewbox
+        var draw = SVG('svg-container').size('100%', '100%');
+        var grp = draw.group();
+        var floorBox = draw.rect(500, 20);
+        floorBox.fill({
+            color: '#000',
+            opacity: 1
+        });
+        floorBox.move(20, 250);
+
+        var circle1 = draw.circle(40);
+        circle1.fill({
+            color: '#fa0',
+            opacity: 1
+        }).stroke({
+            color: '#03a',
+            width: 4
+        });
+        circle1.move(100, 208);
+        circle1.animate(400, '<>', 200).attr({ opacity: 0.4 }).loop();
+        
+        var circle2 = draw.circle(40);
+        circle2.fill({
+            color: '#f00',
+            opacity: 1
+        }).stroke({
+            color: '#03a',
+            width: 4
+        });
+        circle2.move(200, 210);
+        circle2.animate(500, '>', 0).move(197, 160).scale(0.6).attr({ fill: '#fa0' }).loop();
+        
+    </script>
+</body>
+
+</html>

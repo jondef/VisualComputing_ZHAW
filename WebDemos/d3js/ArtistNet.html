@@ -1,0 +1,5433 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+<title>ArtistNet Visualization - ArtistInfo by Metason</title>
+<style>
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.brush .extent {
+    stroke: #000;
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}
+
+.d3-tip {
+    line-height: 1.2;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    border:2px solid;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 1);
+    z-index: 10;
+    border-radius: 5px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+    box-sizing: border-box;
+    display: inline;
+    font-size: 14px;
+    width: 100%;
+    line-height: 1;
+    color: rgba(0, 0, 0, 1);
+    position: absolute;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+    content: "\25BC";
+    margin: -1px 0 0 0;
+    top: 100%;
+    left: 0;
+    text-align: center;
+}
+
+/* Southward tooltips */
+.d3-tip.s:after {
+    content: "\25B2";
+    margin: 0 0 1px 0;
+    top: -14px;
+    left: 0;
+    text-align: center;
+}
+
+/* Eastward tooltips */
+.d3-tip.e:after {
+    content: "\25C0";
+    margin: -7px 0 0 0;
+    top: 50%;
+    left: -8px;
+}
+
+/* Westward tooltips */
+.d3-tip.w:after {
+    content: "\25B6";
+    margin: -7px 0 0 -1px;
+    top: 50%;
+    left: 100%;
+}
+
+// table stuff ---------------------------------
+.sort_indicator.sort_asc {
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAAEIAAABCAWq6kEQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjExR/NCNwAAAXZJREFUOE+lkbtOAlEQhjHGYGKCCZ1PYHwHa9/CKBdXUIwiVsKy7J29r4AI4gvY2GxhaeMLAFJo4QsYtbKhYJyjy4aF06CbfMmcf2f+/HNOBAD+BVWcB6o4D1RxHiKe51HZSWxHC2f5x9zRQZn2fwxVJODgre2aI1VTPveY1Bath0AVmUw6oxvalyhXoKrLwJaLr5goTuudEZKp3XXD1N/cmg2SIoAgcWBaOuQLJw/TvYTQgezNcqXn9nULiIFlG6BqEhrxpB5mD/fFyX5C6JA/Pb7r3LRHtYYLjmuBYWm4ggIyJpFVAZSq/J5mkpuTM0GRyTK5Vqs5bDTrcFFzwHIM0M0qKJiA3AVBN1QosecvmDQWMkilExu2Y310Om24vKrDOAHZXTOUnzXGEHNMeh8ywFsXBbEykGRhIEj8Ey9wfY5n+2Wu1MMX6IZgiz006GKKtcBgGvwWkCVk2SeKLFJ7g+J3aNFvXkFWkbhPzNdmjILib3iRb0IVPz0P1pYQAAAAAElFTkSuQmCC');
+}
+
+.sort_indicator.sort_desc {
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAAEIAAABCAWq6kEQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjExR/NCNwAAAZ5JREFUOE+lkstOwlAQhusF1MSNCTsTVy7c4Eu4cWXcmVQSY1sOUMEEL9REE0xtC+VQKKAiYngJnsEYfQpDfAGjO0nGmaqEajeNi6/t/J35Z+a0Qr/f/xeBYhgCxTAEimEIFMPgXXaTu6ssLWeT7AvGlL1kSla/kFSFyRmCpeQ0Y1JaUSRFFMXoyCCVYa266wyrtQqMU3Or4Dbr0LpswFX7Etqda+j17uD07GSABtMjA03Tpo4KB49VpwIX5rmHYelQrpjAHRvQHJotF9o3V3hvvDEmr1HdyIBIyIlFXS8+l2zTM7DKF2BzCxycxG3WcIom3HY7QzWXcX5qfAaEwpQtm5dfqbtlG8CrNq7Bve7dbge0k+MHzJsYr/EZENmc2nXqfKgbRW8KMqDRTct4kSQx9jvfFxB0OIXC4RPtTiZmSQfO7Vfce/13LvFHIHbYzhKex4DWcGr8Q1XTblAeESgS+C9sY+f3fH7/HqeaDMoh/gqCEEHmkYXNzY2NeHxlGZ9jFH/rEV++LxCECWQSmUZmkDlkFol+a/Ru7Cv0hU+pMPz/XT0+1gAAAABJRU5ErkJggg==');
+}
+
+.sort_indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: 0;
+    margin-left: 5px;
+    cursor: pointer;
+    border:1px solid;
+    color: rgba(250, 150, 0, 1);
+    border-radius: 3px;
+    
+}
+
+.header-table {
+    background: #DDDDDD;
+}
+
+.header-table th {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.body-table td {
+    border-style: dotted;
+    border-width: 1px;
+    border-color: #ddd;
+}
+
+.scroll-table {
+    overflow: auto;
+}
+
+.body-table tr:nth-child(odd) {
+    background: #f3f6f9;
+}
+
+.body-table tr:nth-child(even) {
+    background: #fff;
+}
+
+.body-table td {
+    border-style: dotted;
+    border-width: 0px;
+    border-color: #ddd;
+}
+
+// chords stuff
+#chordcircle circle {
+fill: none;
+pointer-events: all;
+}
+
+#chordcircle:hover path.fade {
+display: none;
+}
+</style>
+</head>
+<body style='margin:0px;'>
+<div class="header" style="height:64px; background:rgb(100,0,25); padding:8pt; overflow-x:hidden; overflow-y:hidden; white-space:nowrap;">
+    <div style="float:left;">
+        <a href="http://www.metason.net/index.php/artistinfo">
+            <img height="64" src="http://www.metason.net/images/logos/ArtistInfo_86.png" alt="">
+        </a>
+    </div>
+    <div style="width:20px; height:20pt; float:left;"></div>
+    <div style="float:left; font-family:sans-serif; ">
+        <span style="color:white; font-size:14pt;">ArtistNet Visualization</span><br><br>
+        <div style="display: inline-block; float:left;">
+            <input type="button" value=" Circle " onclick="JavaScript:setChartType(1)">
+            <input type="button" value=" Graph " onclick="JavaScript:setChartType(2)">
+            <input type="button" value=" Table " onclick="JavaScript:setChartType(3)">
+        </div>
+    </div>
+    <div style="float:left; font-family:sans-serif; ">
+        <span style="color:white; font-size:14pt;"> </span><br><br>
+        <div style="width:60px; height:12pt; float:left;"></div>
+        <span style="color:white; font-size:8pt;">Search:</span>
+        <input type="search" id="searchField" name="search" onsearch="JavaScript:doSearch(this.value)"/>
+    </div>
+    <div style="width:64px;float:right; ">
+        <a href="http://www.metason.net/">
+            <img height="64" src="http://www.metason.net/images/Metason_72.png" alt="MetasonCMS">
+        </a>
+    </div>
+</div>
+
+<div style='height:5px;'></div>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript">
+var creationDate = "2014-03-28 at 08:48";
+
+var artistNetVersion = "2.0";
+
+var nodeList = [
+  {
+    "id" : 0,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/c\/c5\/India.Arie_in_2004_by_Chris_Hakkens.jpg",
+    "roles" : "Musician, Singer, Songwriter, Arranger, Producer",
+    "instr" : "voc, fl, g, key",
+    "totalAlb" : 27,
+    "desc" : "voc, fl, g, *1975 US",
+    "type" : "root",
+    "mainInstr" : "Vocals",
+    "relevance" : 28,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/India.Arie",
+    "year" : 1975,
+    "until" : 0,
+    "mainGenre" : "R&B",
+    "country" : "US",
+    "genre" : "Contemporary R&B, Folk, Soul, Neo soul",
+    "name" : "India.Arie"
+  },
+  {
+    "id" : 1,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-1835262-1285424702.jpeg",
+    "roles" : "",
+    "instr" : "",
+    "totalAlb" : 1,
+    "desc" : "Band ",
+    "type" : "band",
+    "mainInstr" : "",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1835262",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Artists For Haiti"
+  },
+  {
+    "id" : 2,
+    "imgURL" : "",
+    "roles" : "",
+    "instr" : "",
+    "totalAlb" : 0,
+    "desc" : "Band *1985 ",
+    "type" : "band",
+    "mainInstr" : "",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/2067289",
+    "year" : 1985,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Black Rock Coalition"
+  },
+  {
+    "id" : 3,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-150-542243-1328623503.jpeg",
+    "roles" : "",
+    "instr" : "",
+    "totalAlb" : 18,
+    "desc" : "Band ",
+    "type" : "band",
+    "mainInstr" : "",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/542243",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Rascal Flatts"
+  },
+  {
+    "id" : 4,
+    "imgURL" : "",
+    "roles" : "",
+    "instr" : "",
+    "totalAlb" : 0,
+    "desc" : "",
+    "type" : "artist",
+    "mainInstr" : "",
+    "relevance" : 1,
+    "webURL" : "http:\/\/musicbrainz.org\/artist\/2f3c61aa-8174-424c-867b-9b897712b613",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Gramps Morgan"
+  },
+  {
+    "id" : 5,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-98563-1083335616.jpg",
+    "roles" : "",
+    "instr" : "",
+    "totalAlb" : 30,
+    "desc" : "",
+    "type" : "artist",
+    "mainInstr" : "",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/98563",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Musiq"
+  },
+  {
+    "id" : 6,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-255424-1219507339.jpeg",
+    "roles" : "Musician",
+    "instr" : "b",
+    "totalAlb" : 43,
+    "desc" : "b, *1953 US",
+    "type" : "artist",
+    "mainInstr" : "Bass",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/Michael+Rhodes",
+    "year" : 1953,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "US",
+    "genre" : "unknown",
+    "name" : "Michael Rhodes"
+  },
+  {
+    "id" : 7,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "b, dr, key",
+    "totalAlb" : 4,
+    "desc" : "b, dr, key, ",
+    "type" : "artist",
+    "mainInstr" : "Bass",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1765329",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Frank Macek"
+  },
+  {
+    "id" : 8,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "vc",
+    "totalAlb" : 42,
+    "desc" : "vc, ",
+    "type" : "artist",
+    "mainInstr" : "Violoncello",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/267645",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "John Catchings"
+  },
+  {
+    "id" : 9,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "g",
+    "totalAlb" : 2,
+    "desc" : "g, ",
+    "type" : "artist",
+    "mainInstr" : "Guitar",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/653323",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Jimmy \"J-Rok\" English"
+  },
+  {
+    "id" : 10,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/a\/a9\/Victor_Wooten_2.jpg",
+    "roles" : "Musician, Composer, Songwriter, Producer",
+    "instr" : "b, bj, eb, cb",
+    "totalAlb" : 39,
+    "desc" : "b, bj, eb, *1964 US",
+    "type" : "artist",
+    "mainInstr" : "Bass",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Victor_Wooten",
+    "year" : 1964,
+    "until" : 0,
+    "mainGenre" : "R&B",
+    "country" : "US",
+    "genre" : "Funk rock, Funk, Jazz, Jazz fusion",
+    "name" : "Victor Wooten"
+  },
+  {
+    "id" : 11,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-150-229665-1395414116-7729.jpeg",
+    "roles" : "Musician, Singer, Songwriter, Producer",
+    "instr" : "voc, dr, perc",
+    "totalAlb" : 42,
+    "desc" : "voc, dr, perc, *1977 US",
+    "type" : "artist",
+    "mainInstr" : "Vocals",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/229665",
+    "year" : 1977,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "US",
+    "genre" : "unknown",
+    "name" : "Akon"
+  },
+  {
+    "id" : 12,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/8\/81\/Stevie_Wonder.jpg",
+    "roles" : "Musician, Singer, Songwriter, Arranger",
+    "instr" : "voc, dr, key, acc, eb, h",
+    "totalAlb" : 61,
+    "desc" : "voc, dr, key, *1950 US",
+    "type" : "artist",
+    "mainInstr" : "Vocals",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Stevie_Wonder",
+    "year" : 1950,
+    "until" : 0,
+    "mainGenre" : "R&B",
+    "country" : "US",
+    "genre" : "Pop, Soul, Funk, Jazz, Rhythm and blues",
+    "name" : "Stevie Wonder"
+  },
+  {
+    "id" : 13,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/thumb\/a\/a1\/Beth_en_lalola.jpg\/200px-Beth_en_lalola.jpg",
+    "roles" : "Singer, Arranger, Actor",
+    "instr" : "voc",
+    "totalAlb" : 6,
+    "desc" : "voc, *1981 ES",
+    "type" : "artist",
+    "mainInstr" : "Vocals",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Beth_(singer)",
+    "year" : 1981,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "ES",
+    "genre" : "unknown",
+    "name" : "Beth"
+  },
+  {
+    "id" : 14,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "b",
+    "totalAlb" : 1,
+    "desc" : "b, ",
+    "type" : "artist",
+    "mainInstr" : "Bass",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1945642",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Jordi Franco"
+  },
+  {
+    "id" : 15,
+    "imgURL" : "",
+    "roles" : "Musician, Arranger",
+    "instr" : "g",
+    "totalAlb" : 1,
+    "desc" : "g, ",
+    "type" : "artist",
+    "mainInstr" : "Guitar",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1945650",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Marc Martínez"
+  },
+  {
+    "id" : 16,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "dr",
+    "totalAlb" : 2,
+    "desc" : "dr, ",
+    "type" : "artist",
+    "mainInstr" : "Drums",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1945647",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Toni Pagès"
+  },
+  {
+    "id" : 17,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "key",
+    "totalAlb" : 1,
+    "desc" : "key, ",
+    "type" : "artist",
+    "mainInstr" : "Keyboards",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1945651",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Raul Patiño"
+  },
+  {
+    "id" : 18,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "perc",
+    "totalAlb" : 1,
+    "desc" : "perc, ",
+    "type" : "artist",
+    "mainInstr" : "Percussion",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1945638",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Bernat Padro"
+  },
+  {
+    "id" : 19,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "sax",
+    "totalAlb" : 7,
+    "desc" : "sax, ",
+    "type" : "artist",
+    "mainInstr" : "Saxophone",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/1945652",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Pep Poblet"
+  },
+  {
+    "id" : 20,
+    "imgURL" : "",
+    "roles" : "Musician, Arranger",
+    "instr" : "vc",
+    "totalAlb" : 41,
+    "desc" : "vc, *1951 US",
+    "type" : "artist",
+    "mainInstr" : "Violoncello",
+    "relevance" : 2,
+    "webURL" : "http:\/\/www.discogs.com\/John-Mellencamp-Cuttin-Heads\/release\/376811",
+    "year" : 1951,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "US",
+    "genre" : "unknown",
+    "name" : "John Cougar Mellencamp"
+  },
+  {
+    "id" : 21,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "b",
+    "totalAlb" : 19,
+    "desc" : "b, ",
+    "type" : "artist",
+    "mainInstr" : "Bass",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/273557",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Toby Myers"
+  },
+  {
+    "id" : 22,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/b\/b9\/Kenny_Aronoff.jpg",
+    "roles" : "Musician",
+    "instr" : "dr, perc",
+    "totalAlb" : 44,
+    "desc" : "dr, perc, *1953 US",
+    "type" : "artist",
+    "mainInstr" : "Drums",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Kenny_Aronoff",
+    "year" : 1953,
+    "until" : 0,
+    "mainGenre" : "Rock",
+    "country" : "US",
+    "genre" : "Rock",
+    "name" : "Kenny Aronoff"
+  },
+  {
+    "id" : 23,
+    "imgURL" : "",
+    "roles" : "Musician, Songwriter, Producer",
+    "instr" : "g",
+    "totalAlb" : 20,
+    "desc" : "g, *1956 US",
+    "type" : "artist",
+    "mainInstr" : "Guitar",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/Larry+Crane",
+    "year" : 1956,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "US",
+    "genre" : "unknown",
+    "name" : "Larry Crane"
+  },
+  {
+    "id" : 24,
+    "imgURL" : "",
+    "roles" : "Musician",
+    "instr" : "g",
+    "totalAlb" : 35,
+    "desc" : "g, ",
+    "type" : "artist",
+    "mainInstr" : "Guitar",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/263011",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Mike Wanchic"
+  },
+  {
+    "id" : 25,
+    "imgURL" : "",
+    "roles" : "",
+    "instr" : "",
+    "totalAlb" : 12,
+    "desc" : "",
+    "type" : "artist",
+    "mainInstr" : "",
+    "relevance" : 2,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/161760",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "unknown",
+    "genre" : "unknown",
+    "name" : "Lathun"
+  },
+  {
+    "id" : 26,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/thumb\/2\/24\/Cassandra_Wilson_in_Tivoli.jpg\/200px-Cassandra_Wilson_in_Tivoli.jpg",
+    "roles" : "Musician, Singer, Songwriter, Arranger, Producer",
+    "instr" : "voc, g, p",
+    "totalAlb" : 34,
+    "desc" : "voc, g, p, *1955 US",
+    "type" : "artist",
+    "mainInstr" : "Vocals",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Cassandra_Wilson",
+    "year" : 1955,
+    "until" : 0,
+    "mainGenre" : "Folk",
+    "country" : "US",
+    "genre" : "Folk, Blues, Country, Jazz",
+    "name" : "Cassandra Wilson"
+  },
+  {
+    "id" : 27,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-124386-1078360772.jpg",
+    "roles" : "Musician, Singer, Songwriter",
+    "instr" : "voc",
+    "totalAlb" : 35,
+    "desc" : "voc, *1962 GB",
+    "type" : "artist",
+    "mainInstr" : "Vocals",
+    "relevance" : 2,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Julia_Fordham",
+    "year" : 1962,
+    "until" : 0,
+    "mainGenre" : "Pop",
+    "country" : "GB",
+    "genre" : "Pop, Jazz",
+    "name" : "Julia Fordham"
+  },
+  {
+    "id" : 28,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/A-253490-1128801902.jpeg",
+    "roles" : "Musician, Producer",
+    "instr" : "g, bj, cl",
+    "totalAlb" : 0,
+    "desc" : "g, bj, cl, US",
+    "type" : "artist",
+    "mainInstr" : "Guitar",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Dean_Parks",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "Pop",
+    "country" : "US",
+    "genre" : "Pop, Rock, Jazz",
+    "name" : "Dean Parks"
+  },
+  {
+    "id" : 29,
+    "imgURL" : "",
+    "roles" : "Musician, Producer",
+    "instr" : "g",
+    "totalAlb" : 34,
+    "desc" : "g, US",
+    "type" : "artist",
+    "mainInstr" : "Guitar",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/Mark+Goldenberg",
+    "year" : 0,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "US",
+    "genre" : "unknown",
+    "name" : "Mark Goldenberg"
+  },
+  {
+    "id" : 30,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/8\/80\/Billy_Preston.jpg",
+    "roles" : "Musician, Bandleader",
+    "instr" : "voc, p, dr, org, acc, ep, hps",
+    "totalAlb" : 59,
+    "desc" : "voc, p, dr, 1946-2006 US",
+    "type" : "artist",
+    "mainInstr" : "Vocals",
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Billy_Preston",
+    "year" : 1946,
+    "until" : 2006,
+    "mainGenre" : "R&B",
+    "country" : "US",
+    "genre" : "Gospel, Rock, Soul, Funk, Rhythm and blues",
+    "name" : "Billy Preston"
+  },
+  {
+    "id" : 31,
+    "imgURL" : "",
+    "roles" : "Musician, Songwriter, Producer",
+    "instr" : "key, b, g",
+    "totalAlb" : 39,
+    "desc" : "key, b, g, *1956 US",
+    "type" : "artist",
+    "mainInstr" : "Keyboards",
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/artist\/279174",
+    "year" : 1956,
+    "until" : 0,
+    "mainGenre" : "unknown",
+    "country" : "US",
+    "genre" : "unknown",
+    "name" : "Larry Klein"
+  },
+  {
+    "id" : 32,
+    "imgURL" : "http:\/\/a5.mzstatic.com\/us\/r30\/Music2\/v4\/8b\/90\/43\/8b904351-a8db-d9e8-e269-dbf492a6a6f5\/UMG_cvrart_00602537418138_01_RGB72_1500x1500_13UAAIM06583.100x100-75.jpg",
+    "label" : "Motown Records",
+    "tracks" : 20,
+    "country" : "DE",
+    "desc" : "DE 2013  | 20 tracks",
+    "type" : "album",
+    "totalArt" : 3,
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Songversation",
+    "year" : 2013,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "R&B",
+    "name" : "SongVersation"
+  },
+  {
+    "id" : 33,
+    "imgURL" : "",
+    "label" : "",
+    "tracks" : 0,
+    "country" : "unknown",
+    "desc" : "2009 ",
+    "type" : "album",
+    "totalArt" : 1,
+    "relevance" : 1,
+    "webURL" : "",
+    "year" : 2009,
+    "mainGenre" : "unknown",
+    "artist" : "India.Arie",
+    "genre" : "unknown",
+    "name" : "Testimony, Volume 2: Love & Politics"
+  },
+  {
+    "id" : 34,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-3008245-1311481785.jpeg",
+    "label" : "Universal Republic",
+    "tracks" : 4,
+    "country" : "US",
+    "desc" : "US 2008  | 4 tracks",
+    "type" : "album",
+    "totalArt" : 2,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/3008245",
+    "year" : 2008,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie Feat. Musiq Soulchild*",
+    "genre" : "Funk \/ Soul",
+    "name" : "Chocolate HIgh"
+  },
+  {
+    "id" : 35,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-3122701-1316852459.jpeg",
+    "label" : "Universal Republic",
+    "tracks" : 2,
+    "country" : "US",
+    "desc" : "US 2008  | 2 tracks",
+    "type" : "album",
+    "totalArt" : 12,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/3122701",
+    "year" : 2008,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "Funk \/ Soul, Pop",
+    "name" : "Heart Of The Matter"
+  },
+  {
+    "id" : 36,
+    "imgURL" : "",
+    "label" : "Universal Motown",
+    "tracks" : 16,
+    "country" : "US",
+    "desc" : "US 2006  | 16 tracks",
+    "type" : "album",
+    "totalArt" : 5,
+    "relevance" : 1,
+    "webURL" : "http:\/\/musicbrainz.org\/album\/9ae1fc84-79fa-4001-aab5-8530f87143c7",
+    "year" : 2006,
+    "mainGenre" : "unknown",
+    "artist" : "India.Arie",
+    "genre" : "unknown",
+    "name" : "Testimony, Volume 1: Life & Relationship"
+  },
+  {
+    "id" : 37,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-3558868-1335230092.jpeg",
+    "label" : "BET",
+    "tracks" : 5,
+    "country" : "unknown",
+    "desc" : "2006  | 5 tracks",
+    "type" : "album",
+    "totalArt" : 1,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/3558868",
+    "year" : 2006,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "Funk \/ Soul",
+    "name" : "BET Official Presents"
+  },
+  {
+    "id" : 38,
+    "imgURL" : "http:\/\/a3.mzstatic.com\/us\/r30\/Features\/10\/ed\/f2\/dj.qclxhjcq.100x100-75.jpg",
+    "label" : "Motown",
+    "tracks" : 19,
+    "country" : "US",
+    "desc" : "US 2006  | 19 tracks",
+    "type" : "album",
+    "totalArt" : 16,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/testimony-vol.-1-life-relationship\/id166709488?uo=4",
+    "year" : 2006,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "R&B, Funk \/ Soul",
+    "name" : "Testimony: Vol. 1, Life & Relationship"
+  },
+  {
+    "id" : 39,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-3763612-1343426169-4294.jpeg",
+    "label" : "Island Records",
+    "tracks" : 2,
+    "country" : "unknown",
+    "desc" : "2006  | 2 tracks",
+    "type" : "album",
+    "totalArt" : 1,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/3763612",
+    "year" : 2006,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "Funk \/ Soul, Rock",
+    "name" : "There's Hope"
+  },
+  {
+    "id" : 40,
+    "imgURL" : "http:\/\/a1.mzstatic.com\/us\/r30\/Music\/82\/ff\/a6\/mzi.syuuveyu.100x100-75.jpg",
+    "label" : "Motown",
+    "tracks" : 4,
+    "country" : "FR",
+    "desc" : "FR 2005  | 4 tracks",
+    "type" : "album",
+    "totalArt" : 8,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/i-am-not-my-hair-single\/id91415000?uo=4",
+    "year" : 2005,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "R&B, Funk \/ Soul",
+    "name" : "I Am Not My Hair"
+  },
+  {
+    "id" : 41,
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/en\/e\/e4\/Stevie_Wonder_A_Time_2_Love.jpg",
+    "label" : "Motown",
+    "tracks" : 15,
+    "country" : "GB",
+    "desc" : "GB 2005  | 15 tracks",
+    "type" : "album",
+    "totalArt" : 6,
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/A_Time_to_Love",
+    "year" : 2005,
+    "mainGenre" : "Electro",
+    "artist" : "Stevie Wonder",
+    "genre" : "Electro, Funk \/ Soul",
+    "name" : "A Time 2 Love"
+  },
+  {
+    "id" : 42,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-2448004-1284596912.jpeg",
+    "label" : "Vale Music",
+    "tracks" : 23,
+    "country" : "ES",
+    "desc" : "ES 2004  | 23 tracks",
+    "type" : "album",
+    "totalArt" : 16,
+    "relevance" : 1,
+    "webURL" : "http:\/\/musicbrainz.org\/album\/edea751b-28d7-4030-8959-4f90510f42ab",
+    "year" : 2004,
+    "mainGenre" : "Pop",
+    "artist" : "Beth",
+    "genre" : "Pop, Rock",
+    "name" : "Palau De La Música Catalana"
+  },
+  {
+    "id" : 43,
+    "imgURL" : "http:\/\/a1.mzstatic.com\/us\/r30\/Features\/c1\/5f\/62\/dj.vsqjmvho.100x100-75.jpg",
+    "label" : "Island Records",
+    "tracks" : 45,
+    "country" : "US",
+    "desc" : "US 2004  | 45 tracks",
+    "type" : "album",
+    "totalArt" : 9,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/words-music-john-mellencamps\/id26516000?uo=4",
+    "year" : 2004,
+    "mainGenre" : "Rock",
+    "artist" : "John Mellencamp*",
+    "genre" : "Rock",
+    "name" : "Words & Music: John Mellencamp's Greatest Hits"
+  },
+  {
+    "id" : 44,
+    "imgURL" : "http:\/\/a1.mzstatic.com\/us\/r30\/Music\/v4\/70\/04\/15\/700415de-8ad9-3090-9768-a6aecc1bc006\/888608651608.100x100-75.jpg",
+    "label" : "Motown",
+    "tracks" : 2,
+    "country" : "US",
+    "desc" : "US 2003  | 2 tracks",
+    "type" : "album",
+    "totalArt" : 1,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/can-i-walk-you-originally\/id828322238?uo=4",
+    "year" : 2003,
+    "mainGenre" : "unknown",
+    "artist" : "India.Arie",
+    "genre" : "Karaoke, Hip Hop, Rock",
+    "name" : "Can I Walk With You"
+  },
+  {
+    "id" : 45,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-538535-1129051118.jpeg",
+    "label" : "Fall Out Records",
+    "tracks" : 2,
+    "country" : "US",
+    "desc" : "US 2003  | 2 tracks",
+    "type" : "album",
+    "totalArt" : 3,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/538535",
+    "year" : 2003,
+    "mainGenre" : "Electro",
+    "artist" : "Lathun",
+    "genre" : "Electro",
+    "name" : "When Love Came In"
+  },
+  {
+    "id" : 46,
+    "imgURL" : "http:\/\/a3.mzstatic.com\/us\/r30\/Features4\/v4\/7f\/d9\/8f\/7fd98ff6-5bee-e471-10f3-d4f5a1f5ba8d\/dj.xngrfnet.100x100-75.jpg",
+    "label" : "Motown Records",
+    "tracks" : 15,
+    "country" : "GB",
+    "desc" : "GB 2002  | 15 tracks",
+    "type" : "album",
+    "totalArt" : 2,
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Voyage_to_India",
+    "year" : 2002,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "R&B",
+    "name" : "Voyage to India"
+  },
+  {
+    "id" : 47,
+    "imgURL" : "http:\/\/s.pixogs.com\/images\/spacer.gif",
+    "label" : "Motown",
+    "tracks" : 3,
+    "country" : "US",
+    "desc" : "US 2002  | 3 tracks",
+    "type" : "album",
+    "totalArt" : 1,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/4561280",
+    "year" : 2002,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "Funk \/ Soul",
+    "name" : "Little Things"
+  },
+  {
+    "id" : 48,
+    "imgURL" : "http:\/\/a4.mzstatic.com\/us\/r30\/Music\/v4\/8e\/0c\/6e\/8e0c6ec8-f173-2c94-c545-f23ab2421cf6\/00724353507251.100x100-75.jpg",
+    "label" : "Blue Note",
+    "tracks" : 13,
+    "country" : "US",
+    "desc" : "US 2002  | 13 tracks",
+    "type" : "album",
+    "totalArt" : 17,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/belly-of-the-sun\/id723520884?uo=4",
+    "year" : 2002,
+    "mainGenre" : "Rock",
+    "artist" : "Cassandra Wilson",
+    "genre" : "Rock, Jazz",
+    "name" : "Belly Of The Sun"
+  },
+  {
+    "id" : 49,
+    "imgURL" : "http:\/\/a2.mzstatic.com\/us\/r30\/Music\/v4\/18\/ed\/cf\/18edcfb3-1964-d18f-9148-3677f8119c12\/00015707971959.100x100-75.jpg",
+    "label" : "Vanguard",
+    "tracks" : 11,
+    "country" : "US",
+    "desc" : "US 2002  | 11 tracks",
+    "type" : "album",
+    "totalArt" : 17,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/concrete-love\/id712136910?uo=4",
+    "year" : 2002,
+    "mainGenre" : "Pop",
+    "artist" : "Julia Fordham",
+    "genre" : "Pop, Electro",
+    "name" : "Concrete Love"
+  },
+  {
+    "id" : 50,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-1413383-1232588594.jpeg",
+    "label" : "Motown",
+    "tracks" : 13,
+    "country" : "US",
+    "desc" : "US 2002  | 13 tracks",
+    "type" : "album",
+    "totalArt" : 2,
+    "relevance" : 1,
+    "webURL" : "http:\/\/musicbrainz.org\/album\/9866846a-034b-418f-92f2-8d5959cefcbf",
+    "year" : 2002,
+    "mainGenre" : "R&B",
+    "artist" : "Lathun",
+    "genre" : "Funk \/ Soul",
+    "name" : "Fortunate"
+  },
+  {
+    "id" : 51,
+    "imgURL" : "http:\/\/a5.mzstatic.com\/us\/r30\/Features\/45\/dc\/3e\/dj.dzvntljf.100x100-75.jpg",
+    "label" : "Motown Records",
+    "tracks" : 23,
+    "country" : "US",
+    "desc" : "US 2001  | 23 tracks",
+    "type" : "album",
+    "totalArt" : 4,
+    "relevance" : 1,
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Acoustic_Soul",
+    "year" : 2001,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "R&B",
+    "name" : "Acoustic Soul"
+  },
+  {
+    "id" : 52,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-1555681-1347177823-3752.jpeg",
+    "label" : "Motown",
+    "tracks" : 6,
+    "country" : "US",
+    "desc" : "US 2001  | 6 tracks",
+    "type" : "album",
+    "totalArt" : 2,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/1555681",
+    "year" : 2001,
+    "mainGenre" : "R&B",
+    "artist" : "India.Arie",
+    "genre" : "Funk \/ Soul",
+    "name" : "Simple"
+  },
+  {
+    "id" : 53,
+    "imgURL" : "http:\/\/a2.mzstatic.com\/us\/r30\/Music\/6c\/67\/cc\/mzi.fftqoxnl.100x100-75.jpg",
+    "label" : "Columbia",
+    "tracks" : 10,
+    "country" : "US",
+    "desc" : "US 2001  | 10 tracks",
+    "type" : "album",
+    "totalArt" : 4,
+    "relevance" : 1,
+    "webURL" : "https:\/\/itunes.apple.com\/us\/album\/cuttin-heads\/id192820993?uo=4",
+    "year" : 2001,
+    "mainGenre" : "Rock",
+    "artist" : "John Mellencamp*",
+    "genre" : "Rock",
+    "name" : "Cuttin' Heads"
+  },
+  {
+    "id" : 54,
+    "imgURL" : "http:\/\/s.pixogs.com\/image\/R-150-613470-1138526461.jpeg",
+    "label" : "Motown",
+    "tracks" : 4,
+    "country" : "US",
+    "desc" : "US 2000  | 4 tracks",
+    "type" : "album",
+    "totalArt" : 2,
+    "relevance" : 1,
+    "webURL" : "http:\/\/www.discogs.com\/release\/613470",
+    "year" : 2000,
+    "mainGenre" : "Gospel",
+    "artist" : "India.Arie",
+    "genre" : "Hip Hop",
+    "name" : "Acoustic Soul Sampler"
+  },
+  {
+    "abbrev" : "voc",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/c\/c2\/Harry_Belafonte_singing_1954.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Singing",
+    "id" : 55,
+    "type" : "instrument",
+    "name" : "Vocals",
+    "relevance" : 28
+  },
+  {
+    "abbrev" : "fl",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/8\/8e\/Shinobue_and_other_flutes.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Flute",
+    "id" : 56,
+    "type" : "instrument",
+    "name" : "Flute",
+    "relevance" : 21
+  },
+  {
+    "abbrev" : "g",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/4\/45\/GuitareClassique5.png",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Guitar",
+    "id" : 57,
+    "type" : "instrument",
+    "name" : "Guitar",
+    "relevance" : 29
+  },
+  {
+    "abbrev" : "key",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/b\/bd\/D274.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Keyboard_instrument",
+    "id" : 58,
+    "type" : "instrument",
+    "name" : "Keyboards",
+    "relevance" : 25
+  },
+  {
+    "abbrev" : "b",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Bass_(instrument)",
+    "id" : 59,
+    "type" : "instrument",
+    "name" : "Bass",
+    "relevance" : 6
+  },
+  {
+    "abbrev" : "dr",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/6\/68\/Drumming_2.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Drum_kit",
+    "id" : 60,
+    "type" : "instrument",
+    "name" : "Drums",
+    "relevance" : 6
+  },
+  {
+    "abbrev" : "vc",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Violoncello",
+    "id" : 61,
+    "type" : "instrument",
+    "name" : "Violoncello",
+    "relevance" : 3
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/d\/d8\/Steinberger_bass.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Steinberger",
+    "id" : 62,
+    "type" : "instrument",
+    "name" : "Steinberger",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/8\/8d\/Fodera_head.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Fodera",
+    "id" : 63,
+    "type" : "instrument",
+    "name" : "Fodera",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "bj",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/7\/79\/BluegrassBanjo.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Banjo",
+    "id" : 64,
+    "type" : "instrument",
+    "name" : "Banjo",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "eb",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/en\/b\/b2\/Stingray_guitar.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Bass_guitar",
+    "id" : 65,
+    "type" : "instrument",
+    "name" : "Bass guitar",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "cb",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/d\/d3\/AGK_bass1_full.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Double_bass",
+    "id" : 66,
+    "type" : "instrument",
+    "name" : "Double bass",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/6\/6e\/Violin_VL100.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Fiddle",
+    "id" : 67,
+    "type" : "instrument",
+    "name" : "Fiddle",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "perc",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Percussion",
+    "id" : 68,
+    "type" : "instrument",
+    "name" : "Percussion",
+    "relevance" : 3
+  },
+  {
+    "abbrev" : "acc",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/e\/e9\/A_convertor_free-bass_piano-accordion_and_a_Russian_bayan.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Accordion",
+    "id" : 69,
+    "type" : "instrument",
+    "name" : "Accordion",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/b\/be\/2006-06-03_Congas1.JPG",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Conga",
+    "id" : 70,
+    "type" : "instrument",
+    "name" : "Conga",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "h",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/e\/ec\/16-hole_chrom_10-hole_diatonic.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Harmonica",
+    "id" : 71,
+    "type" : "instrument",
+    "name" : "Harmonica",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/d\/d8\/Bongo.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Bongo_drum",
+    "id" : 72,
+    "type" : "instrument",
+    "name" : "Bongo drum",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/4\/48\/Korg_RK-100.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Keytar",
+    "id" : 73,
+    "type" : "instrument",
+    "name" : "Keytar",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "sax",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/7\/7e\/Saxophone_alto.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Saxophone",
+    "id" : 74,
+    "type" : "instrument",
+    "name" : "Saxophone",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "p",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/c\/c8\/Grand_piano_and_upright_piano.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Piano",
+    "id" : 75,
+    "type" : "instrument",
+    "name" : "Piano",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "cl",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/c\/c7\/Clarinet.png",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Clarinet",
+    "id" : 76,
+    "type" : "instrument",
+    "name" : "Clarinet",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/a\/a6\/Lapstyle.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Steel_guitar",
+    "id" : 77,
+    "type" : "instrument",
+    "name" : "Steel guitar",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "org",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/3\/3b\/OrgueSaintThomasStrasbourg.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Organ_(music)",
+    "id" : 78,
+    "type" : "instrument",
+    "name" : "Organ",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "hps",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/thumb\/8\/83\/ClavecinRuckers&Taskin.JPG\/200px-ClavecinRuckers&Taskin.JPG",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Harpsichord",
+    "id" : 79,
+    "type" : "instrument",
+    "name" : "Harpsichord",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "??",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/3\/3b\/OrgueSaintThomasStrasbourg.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Organ_(music)",
+    "id" : 80,
+    "type" : "instrument",
+    "name" : "Organ (music)",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "ep",
+    "imgURL" : "http:\/\/upload.wikimedia.org\/wikipedia\/commons\/2\/27\/NeoBechstein_Fl%C3%BCgel.jpg",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Electric_piano",
+    "id" : 81,
+    "type" : "instrument",
+    "name" : "Electric piano",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "R&B",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Rhythm_and_blues",
+    "id" : 82,
+    "type" : "genre",
+    "name" : "R&B\/Soul",
+    "relevance" : 22
+  },
+  {
+    "abbrev" : "OST",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Soundtrack",
+    "id" : 83,
+    "type" : "genre",
+    "name" : "Soundtrack",
+    "relevance" : 6
+  },
+  {
+    "abbrev" : "Jazz",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Jazz",
+    "id" : 84,
+    "type" : "genre",
+    "name" : "Jazz",
+    "relevance" : 7
+  },
+  {
+    "abbrev" : "Pop",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Pop_music",
+    "id" : 85,
+    "type" : "genre",
+    "name" : "Pop",
+    "relevance" : 6
+  },
+  {
+    "abbrev" : "Dance",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Dance_music",
+    "id" : 86,
+    "type" : "genre",
+    "name" : "Dance",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "Rock",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Rock_music",
+    "id" : 87,
+    "type" : "genre",
+    "name" : "Rock",
+    "relevance" : 9
+  },
+  {
+    "abbrev" : "Country",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Country_music",
+    "id" : 88,
+    "type" : "genre",
+    "name" : "Country",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "Electro",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Electronic_music",
+    "id" : 89,
+    "type" : "genre",
+    "name" : "Electronic",
+    "relevance" : 3
+  },
+  {
+    "abbrev" : "Gospel",
+    "imgURL" : "",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Gospel_music",
+    "id" : 90,
+    "type" : "genre",
+    "name" : "Gospel",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "US",
+    "region" : "Americas",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/United States",
+    "id" : 91,
+    "subregion" : "Northern America",
+    "type" : "country",
+    "name" : "United States",
+    "relevance" : 28
+  },
+  {
+    "abbrev" : "ES",
+    "region" : "Europe",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Spain",
+    "id" : 92,
+    "subregion" : "Southern Europe",
+    "type" : "country",
+    "name" : "Spain",
+    "relevance" : 2
+  },
+  {
+    "abbrev" : "GB",
+    "region" : "Europe",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/United Kingdom",
+    "id" : 93,
+    "subregion" : "Northern Europe",
+    "type" : "country",
+    "name" : "United Kingdom",
+    "relevance" : 3
+  },
+  {
+    "abbrev" : "DE",
+    "region" : "Europe",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/Germany",
+    "id" : 94,
+    "subregion" : "Western Europe",
+    "type" : "country",
+    "name" : "Germany",
+    "relevance" : 1
+  },
+  {
+    "abbrev" : "FR",
+    "region" : "Europe",
+    "webURL" : "http:\/\/en.wikipedia.org\/wiki\/France",
+    "id" : 95,
+    "subregion" : "Western Europe",
+    "type" : "country",
+    "name" : "France",
+    "relevance" : 1
+  }
+];
+
+var linkList = [
+  {
+    "relevance" : 3,
+    "source" : 0,
+    "type" : "root-band",
+    "target" : 1
+  },
+  {
+    "relevance" : 3,
+    "source" : 0,
+    "type" : "root-band",
+    "target" : 2
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "artist-instrument",
+    "target" : 56
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "artist-instrument",
+    "target" : 58
+  },
+  {
+    "relevance" : 1,
+    "source" : 1,
+    "type" : "band-artist",
+    "target" : 5
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-band",
+    "target" : 3
+  },
+  {
+    "relevance" : 3,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 32
+  },
+  {
+    "relevance" : 1,
+    "source" : 32,
+    "type" : "album-artist",
+    "target" : 4
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 33
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 34
+  },
+  {
+    "relevance" : 2,
+    "source" : 34,
+    "type" : "album-artist",
+    "target" : 5
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 35
+  },
+  {
+    "relevance" : 1,
+    "source" : 35,
+    "type" : "album-artist",
+    "target" : 6
+  },
+  {
+    "relevance" : 2,
+    "source" : 35,
+    "type" : "album-artist",
+    "target" : 7
+  },
+  {
+    "relevance" : 1,
+    "source" : 35,
+    "type" : "album-artist",
+    "target" : 8
+  },
+  {
+    "relevance" : 2,
+    "source" : 35,
+    "type" : "album-artist",
+    "target" : 9
+  },
+  {
+    "relevance" : 3,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 36
+  },
+  {
+    "relevance" : 1,
+    "source" : 36,
+    "type" : "album-artist",
+    "target" : 3
+  },
+  {
+    "relevance" : 1,
+    "source" : 36,
+    "type" : "album-artist",
+    "target" : 10
+  },
+  {
+    "relevance" : 1,
+    "source" : 36,
+    "type" : "album-artist",
+    "target" : 11
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 37
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 38
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 39
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 40
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 41
+  },
+  {
+    "relevance" : 1,
+    "source" : 41,
+    "type" : "album-artist",
+    "target" : 12
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 42
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 13
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 14
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 15
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 16
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 17
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 18
+  },
+  {
+    "relevance" : 2,
+    "source" : 42,
+    "type" : "album-artist",
+    "target" : 19
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 43
+  },
+  {
+    "relevance" : 1,
+    "source" : 43,
+    "type" : "album-artist",
+    "target" : 20
+  },
+  {
+    "relevance" : 2,
+    "source" : 43,
+    "type" : "album-artist",
+    "target" : 21
+  },
+  {
+    "relevance" : 1,
+    "source" : 43,
+    "type" : "album-artist",
+    "target" : 22
+  },
+  {
+    "relevance" : 2,
+    "source" : 43,
+    "type" : "album-artist",
+    "target" : 23
+  },
+  {
+    "relevance" : 2,
+    "source" : 43,
+    "type" : "album-artist",
+    "target" : 24
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 44
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 45
+  },
+  {
+    "relevance" : 2,
+    "source" : 45,
+    "type" : "album-artist",
+    "target" : 25
+  },
+  {
+    "relevance" : 3,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 46
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 47
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 48
+  },
+  {
+    "relevance" : 2,
+    "source" : 48,
+    "type" : "album-artist",
+    "target" : 26
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 49
+  },
+  {
+    "relevance" : 3,
+    "source" : 49,
+    "type" : "album-artist",
+    "target" : 27
+  },
+  {
+    "relevance" : 1,
+    "source" : 49,
+    "type" : "album-artist",
+    "target" : 28
+  },
+  {
+    "relevance" : 1,
+    "source" : 49,
+    "type" : "album-artist",
+    "target" : 29
+  },
+  {
+    "relevance" : 1,
+    "source" : 49,
+    "type" : "album-artist",
+    "target" : 30
+  },
+  {
+    "relevance" : 1,
+    "source" : 49,
+    "type" : "album-artist",
+    "target" : 31
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 50
+  },
+  {
+    "relevance" : 2,
+    "source" : 50,
+    "type" : "album-artist",
+    "target" : 25
+  },
+  {
+    "relevance" : 3,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 51
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 52
+  },
+  {
+    "relevance" : 1,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 53
+  },
+  {
+    "relevance" : 1,
+    "source" : 53,
+    "type" : "album-artist",
+    "target" : 20
+  },
+  {
+    "relevance" : 2,
+    "source" : 0,
+    "type" : "root-album",
+    "target" : 54
+  },
+  {
+    "relevance" : 1,
+    "source" : 6,
+    "type" : "artist-instrument",
+    "target" : 59
+  },
+  {
+    "relevance" : 1,
+    "source" : 38,
+    "type" : "album-artist",
+    "target" : 7
+  },
+  {
+    "relevance" : 1,
+    "source" : 7,
+    "type" : "artist-instrument",
+    "target" : 59
+  },
+  {
+    "relevance" : 1,
+    "source" : 7,
+    "type" : "artist-instrument",
+    "target" : 60
+  },
+  {
+    "relevance" : 1,
+    "source" : 7,
+    "type" : "artist-instrument",
+    "target" : 58
+  },
+  {
+    "relevance" : 1,
+    "source" : 8,
+    "type" : "artist-instrument",
+    "target" : 61
+  },
+  {
+    "relevance" : 1,
+    "source" : 38,
+    "type" : "album-artist",
+    "target" : 9
+  },
+  {
+    "relevance" : 1,
+    "source" : 9,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 59
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 64
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 65
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 66
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 62
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 63
+  },
+  {
+    "relevance" : 1,
+    "source" : 10,
+    "type" : "artist-instrument",
+    "target" : 67
+  },
+  {
+    "relevance" : 1,
+    "source" : 11,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 11,
+    "type" : "artist-instrument",
+    "target" : 60
+  },
+  {
+    "relevance" : 1,
+    "source" : 11,
+    "type" : "artist-instrument",
+    "target" : 68
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 60
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 58
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 69
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 65
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 71
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 70
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 72
+  },
+  {
+    "relevance" : 1,
+    "source" : 12,
+    "type" : "artist-instrument",
+    "target" : 73
+  },
+  {
+    "relevance" : 1,
+    "source" : 13,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 14,
+    "type" : "artist-instrument",
+    "target" : 59
+  },
+  {
+    "relevance" : 1,
+    "source" : 15,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 16,
+    "type" : "artist-instrument",
+    "target" : 60
+  },
+  {
+    "relevance" : 1,
+    "source" : 17,
+    "type" : "artist-instrument",
+    "target" : 58
+  },
+  {
+    "relevance" : 1,
+    "source" : 18,
+    "type" : "artist-instrument",
+    "target" : 68
+  },
+  {
+    "relevance" : 1,
+    "source" : 19,
+    "type" : "artist-instrument",
+    "target" : 74
+  },
+  {
+    "relevance" : 1,
+    "source" : 20,
+    "type" : "artist-instrument",
+    "target" : 61
+  },
+  {
+    "relevance" : 1,
+    "source" : 21,
+    "type" : "artist-instrument",
+    "target" : 59
+  },
+  {
+    "relevance" : 1,
+    "source" : 22,
+    "type" : "artist-instrument",
+    "target" : 60
+  },
+  {
+    "relevance" : 1,
+    "source" : 22,
+    "type" : "artist-instrument",
+    "target" : 68
+  },
+  {
+    "relevance" : 1,
+    "source" : 23,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 24,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 46,
+    "type" : "album-artist",
+    "target" : 25
+  },
+  {
+    "relevance" : 1,
+    "source" : 26,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 26,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 26,
+    "type" : "artist-instrument",
+    "target" : 75
+  },
+  {
+    "relevance" : 1,
+    "source" : 27,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 28,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 28,
+    "type" : "artist-instrument",
+    "target" : 64
+  },
+  {
+    "relevance" : 1,
+    "source" : 28,
+    "type" : "artist-instrument",
+    "target" : 76
+  },
+  {
+    "relevance" : 1,
+    "source" : 28,
+    "type" : "artist-instrument",
+    "target" : 77
+  },
+  {
+    "relevance" : 1,
+    "source" : 29,
+    "type" : "artist-instrument",
+    "target" : 57
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 55
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 75
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 60
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 78
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 69
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 81
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 79
+  },
+  {
+    "relevance" : 1,
+    "source" : 30,
+    "type" : "artist-instrument",
+    "target" : 80
+  },
+  {
+    "relevance" : 1,
+    "source" : 31,
+    "type" : "artist-instrument",
+    "target" : 58
+  },
+  {
+    "relevance" : 1,
+    "source" : 31,
+    "type" : "artist-instrument",
+    "target" : 59
+  },
+  {
+    "relevance" : 1,
+    "source" : 31,
+    "type" : "artist-instrument",
+    "target" : 57
+  }
+];
+
+// ArtistNet Visualisation Functionality
+// Visualization created by ArtistInfo App http://www.metason.net/artistinfo
+// Data collected by ArtistInfo for Mac
+// (c) 2014 Metason by Philipp Ackermann
+// http://www.metason.net
+
+/*
+ DOM STRUCTURE <--- Todo !!!!!!!!!!!
+ -head
+ -body
+ [-header] (only in web)
+ --tip // tooltip
+ --svg
+ (left)
+ ---panel
+ ---title
+ ---instrCtrl
+ ---genreCtrl
+ ---countryCtrl
+ (mid)
+ ---timeCtrl
+ ---chart (visibility of children toggled)
+ ----#graph
+ ----#circle (chord layout)
+ ----#table
+ ---caption
+ (right)
+ ---settings
+ ---legend
+ [-footer] (only in web)
+ */
+
+var width = 940,
+height = 680,
+leftmargin = 128,
+topmargin = 100,
+ctrlTopMargin = 238;
+
+var chartwidth = width - leftmargin,
+chartheight = height - topmargin,
+leftfix = (chartwidth - chartheight) * 50 / 100,
+rightfix = (chartwidth - chartheight) * 50 / 100;
+
+var charttype= "graph"; // graph, ...., matrix, table
+var graph,
+circle,
+table;
+
+var animate= false;
+
+// Max classification types used (color ranges map to 20!)
+var maxTypes = 20;
+
+// time range controller
+var minYear = 5000,
+maxYear = 0,
+lowerYear = minYear,
+upperYear = 0;
+
+// data flags for filtering
+var withRoot = true,
+withInstruments = false;
+
+// display flags for viewing
+var showAlbumLabel = true,
+showBandLabel = true,
+clusterType= "Instrument"; // Instrument, Genre, Country
+
+var webMode = "browser"; // or "browser"
+
+// color scheme and ranges
+
+var rootColor= "#880019",
+artistColor= "#DD5500",
+bandColor= "#00AA99",
+//albumColor= "#4682B4",
+albumColor= "#F2DD33",
+disAlbumColor= "#F0F0D0",
+brushColor= "#E0D000",
+instrumentColor= "#3182BD",
+notSelectedColor= "#DDDDDD",
+orangeColor= "#FA9600",
+bordeauxColor= "#640019",
+chordDefColor= "#CCCCCC",
+nextColor= "#222222";
+
+var nodeColor = d3.scale.ordinal()
+.domain(["root", "artist", "band", "album", "instrument"])
+.range([rootColor, artistColor, bandColor, albumColor, instrumentColor]);
+//  .range(["#3182bd", "#42a48d", "#7d4098", "#969696", "#222222"]);
+
+var nodeSize = d3.scale.ordinal()
+.domain(["root", "artist", "band", "album", "instrument"])
+.range([24, 10, 9, 8, 6]);
+
+var nodeFontSize = d3.scale.ordinal()
+.domain(["root", "artist", "band", "album", "instrument"])
+.range(["16px", "12px", "10px", "9px", "8px"]);
+
+var linkColor = d3.scale.ordinal()
+.domain(["root-band", "root-album", "band-artist", "album-artist", "artist-artist", "artist-instrument"])
+.range(["#AA0033", "#3182bd", "#7d4098", "#969696", "#229922", "#992222"]);
+
+var linkSize = d3.scale.ordinal()
+.domain(["root-band", "root-album", "band-artist", "album-artist", "artist-artist", "artist-instrument"])
+.range([3, 2, 3, 1, 3, 1]);
+
+var linkDistance = d3.scale.ordinal()
+.domain(["root-band", "root-album", "band-artist", "album-artist", "artist-artist", "artist-instrument"])
+.range([1, 2, 1, 2, 4, 3]);
+
+var linkStrength = d3.scale.ordinal()
+.domain(["root-band", "root-album", "band-artist", "album-artist", "artist-artist", "artist-instrument"])
+.range([1, .7, .3, .2, .1, .1]);
+
+var maxAlbums = 0,
+maxRelevance = 0;
+
+var dataEnhanced = function () {
+    for(var j=0; j<nodeList.length; j++) {
+        if (nodeList[j].type == "artist") {
+            if(nodeList[j].relevance > maxRelevance)
+            maxRelevance= nodeList[j].relevance;
+        }
+        if (nodeList[j].type == "band") {
+            if(nodeList[j].totalAlb > maxAlbums)
+            maxAlbums= nodeList[j].totalAlb;
+        }
+    }
+    if (maxRelevance < 4) maxRelevance= 12;
+    if (maxAlbums < 4) maxAlbums= 10;
+    return true;
+}
+
+// ------- Table Function ----------------------------------------------------------------------------------------
+// d3 table sort by Ilkka Huotari, http://ilkkah.com
+
+(function(globals) {
+    
+    var sort_column = -1, // don't sort any column by default
+    sort_order = 1; // 1 = desc
+    
+    // utility functions. does d3 have these?
+    var isArray = Array.isArray || function(arr) {
+        return toString.call(arr) == '[object Array]';
+    };
+    
+    var isObject = function(a) {
+        return (!!a) && (a.constructor === Object);
+    };
+    
+    globals.TableSort = function(table, columns, data, dimensions) {
+        
+        dimensions = dimensions || { width: '500px', height: '300px' };
+        
+        var dim = {
+            w: dimensions.width,
+            h: dimensions.height,
+            tablew: dimensions.width,
+            divh: (parseFloat(dimensions.height) - 60) + "px",
+            divw: (parseFloat(dimensions.width) + 20) + "px",
+            cell_widths: []
+        },
+        outerTable,
+        innerTable,
+        tbody,
+        rows;
+        
+        function sort(d, tmp, i) {
+            var sort,
+            sort_btn = d3.select(d3.event.toElement || d3.event.target),
+            is_desc = sort_btn.classed('sort_desc');
+            
+            sort_order = is_desc? -1: 1;
+            sort_btn.classed('sort_desc', !is_desc).classed('sort_asc', is_desc);
+            sort_column = i;
+            tbody.selectAll("tr").sort(function(a, b) { return d.sort(isArray(a)? a[sort_column]: a.data[sort_column], isArray(b)? b[sort_column]: b.data[sort_column], sort_order); } );
+        }
+        
+        outerTable = ((typeof table === 'string')? d3.select(table): table).html(null).append("table").attr("style", "width:" + dim.w);
+        outerTable
+        .append("tr")
+        .append("td")
+        .append("table").attr("class", "header-table").attr("style", "width: " + dim.tablew)
+        .append("tr").selectAll("th").data(columns).enter()
+        .append("th")
+        .text(function (column) { return column.text; })
+        .selectAll('span')
+        .data(function(d, i) { if (d.sort_column && sort_column === -1) { sort_column = i; } return d.sort? [d]: ''; }).enter()
+        .append('span')
+        .classed('sort_indicator sort_desc', true)
+        .on('click', sort)
+        
+        innerTable = outerTable
+        .append("tr")
+        .append("td")
+        .append("div").attr("class", "scroll-table").attr("style", "width: " + dim.divw + "; height:" + dim.divh + ";")
+        .append("table").attr("class", "body-table").attr("style", "width:" + dim.tablew + "; height: " + dim.h + "; table-layout:fixed");
+        
+        tbody = innerTable.append("tbody");
+        
+        // Create a row for each object in the data and perform an intial sort.
+        rows = tbody.selectAll("tr").data(data).enter().append("tr");
+        
+        // set element attributes if data is given in the form of data = [ { ..., data: []}, { ..., data: []}, { ..., data: []}, { ..., data: []} ]
+        // where '...' stands for attributes to set
+        rows.datum(function(obj) {
+            if (isObject(obj)) {
+                for (var i in obj) {
+                    if (i !== 'data') {
+                        this.setAttribute(i, obj[i]);
+                    }
+                }
+            }
+            return obj;
+        })
+        
+        // initial sort
+        if (sort_column >= 0 && columns[sort_column].sort) {
+            tbody.selectAll('tr').sort(function(a, b) { return columns[sort_column].sort(isArray(a)? a[sort_column]: a.data[sort_column], isArray(b)? b[sort_column]: b.data[sort_column], sort_order); })
+        }
+        
+        // Create a cell in each row for each column
+        rows.selectAll("td")
+        .data(function (d) { return isArray(d)? d: d.data; }).enter()
+        .append("td")
+        .text(function (d) { return d; });
+        
+        // get cell widths
+        d3.select(rows.node())
+        .selectAll('td')
+        .each(function(node, i) { dim.cell_widths.push(this.offsetablew); });
+        
+        // set cell widths to the header-table
+        outerTable.selectAll('.header-table tr th')
+        .data(dim.cell_widths)
+        .style('width', function(d) { this.style.width = d + 'px'; return 1; })
+    }
+    
+    globals.TableSort.alphabetic = function(a, b, sort_order) { return sort_order * a.localeCompare(b); }
+    globals.TableSort.numeric = function(a, b, sort_order) { return sort_order * (parseFloat(b) - parseFloat(a)); }
+    
+}(window));
+
+
+// ------- Tooltip Function --------------------------------------------------------------------------------------
+// code from http://bl.ocks.org/Caged/6476579 by Justin Palmer
+// d3.tip
+// Copyright (c) 2013 Justin Palmer
+//
+// Tooltips for d3.js SVG visualizations
+// Public - contructs a new tooltip
+//
+
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module with d3 as a dependency.
+        define(['d3'], factory)
+    } else {
+        // Browser global.
+        root.d3.tip = factory(root.d3)
+    }
+}(this, function (d3) {
+    
+    // Public - contructs a new tooltip
+    //
+    // Returns a tip
+    return function() {
+        var direction = d3_tip_direction,
+        offset    = d3_tip_offset,
+        html      = d3_tip_html,
+        node      = initNode(),
+        svg       = null,
+        point     = null,
+        target    = null
+        
+        function tip(vis) {
+            svg = getSVGNode(vis)
+            point = svg.createSVGPoint()
+            document.body.appendChild(node)
+        }
+        
+        // Public - show the tooltip on the screen
+        //
+        // Returns a tip
+        tip.show = function() {
+            var args = Array.prototype.slice.call(arguments)
+            if(args[args.length - 1] instanceof SVGElement) target = args.pop()
+            
+            var content = html.apply(this, args),
+            poffset = offset.apply(this, args),
+            dir     = direction.apply(this, args),
+            nodel   = d3.select(node),
+            i       = directions.length,
+            coords
+            
+            nodel.html(content)
+            .style({ opacity: 1, 'pointer-events': 'all' })
+            
+            while(i--) nodel.classed(directions[i], false)
+            coords = direction_callbacks.get(dir).apply(this)
+            nodel.classed(dir, true).style({
+                top: (coords.top +  poffset[0]) + 'px',
+                left: (coords.left + poffset[1]) + 'px'
+            })
+            
+            return tip
+        }
+        
+        // Public - hide the tooltip
+        //
+        // Returns a tip
+        tip.hide = function() {
+            nodel = d3.select(node)
+            nodel.style({ opacity: 0, 'pointer-events': 'none' })
+            return tip
+        }
+        
+        // Public: Proxy attr calls to the d3 tip container.  Sets or gets attribute value.
+        //
+        // n - name of the attribute
+        // v - value of the attribute
+        //
+        // Returns tip or attribute value
+        tip.attr = function(n, v) {
+            if (arguments.length < 2 && typeof n === 'string') {
+                return d3.select(node).attr(n)
+            } else {
+                var args =  Array.prototype.slice.call(arguments)
+                d3.selection.prototype.attr.apply(d3.select(node), args)
+            }
+            
+            return tip
+        }
+        
+        // Public: Proxy style calls to the d3 tip container.  Sets or gets a style value.
+        //
+        // n - name of the property
+        // v - value of the property
+        //
+        // Returns tip or style property value
+        tip.style = function(n, v) {
+            if (arguments.length < 2 && typeof n === 'string') {
+                return d3.select(node).style(n)
+            } else {
+                var args =  Array.prototype.slice.call(arguments)
+                d3.selection.prototype.style.apply(d3.select(node), args)
+            }
+            
+            return tip
+        }
+        
+        // Public: Set or get the direction of the tooltip
+        //
+        // v - One of n(north), s(south), e(east), or w(west), nw(northwest),
+        //     sw(southwest), ne(northeast) or se(southeast)
+        //
+        // Returns tip or direction
+        tip.direction = function(v) {
+            if (!arguments.length) return direction
+            direction = v == null ? v : d3.functor(v)
+            
+            return tip
+        }
+        
+        // Public: Sets or gets the offset of the tip
+        //
+        // v - Array of [x, y] offset
+        //
+        // Returns offset or
+        tip.offset = function(v) {
+            if (!arguments.length) return offset
+            offset = v == null ? v : d3.functor(v)
+            
+            return tip
+        }
+        
+        // Public: sets or gets the html value of the tooltip
+        //
+        // v - String value of the tip
+        //
+        // Returns html value or tip
+        tip.html = function(v) {
+            if (!arguments.length) return html
+            html = v == null ? v : d3.functor(v)
+            
+            return tip
+        }
+        
+        function d3_tip_direction() { return 'n' }
+        function d3_tip_offset() { return [0, 0] }
+        function d3_tip_html() { return ' ' }
+        
+        var direction_callbacks = d3.map({
+            n:  direction_n,
+            s:  direction_s,
+            e:  direction_e,
+            w:  direction_w,
+            nw: direction_nw,
+            ne: direction_ne,
+            sw: direction_sw,
+            se: direction_se
+        }),
+        
+        directions = direction_callbacks.keys()
+        
+        function direction_n() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.n.y - node.offsetHeight,
+                left: bbox.n.x - node.offsetWidth / 2
+            }
+        }
+        
+        function direction_s() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.s.y,
+                left: bbox.s.x - node.offsetWidth / 2
+            }
+        }
+        
+        function direction_e() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.e.y - node.offsetHeight / 2,
+                left: bbox.e.x
+            }
+        }
+        
+        function direction_w() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.w.y - node.offsetHeight / 2,
+                left: bbox.w.x - node.offsetWidth
+            }
+        }
+        
+        function direction_nw() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.nw.y - node.offsetHeight,
+                left: bbox.nw.x - node.offsetWidth
+            }
+        }
+        
+        function direction_ne() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.ne.y - node.offsetHeight,
+                left: bbox.ne.x
+            }
+        }
+        
+        function direction_sw() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.sw.y,
+                left: bbox.sw.x - node.offsetWidth
+            }
+        }
+        
+        function direction_se() {
+            var bbox = getScreenBBox()
+            return {
+                top:  bbox.se.y,
+                left: bbox.e.x
+            }
+        }
+        
+        function initNode() {
+            var node = d3.select(document.createElement('div'))
+            node.style({
+                position: 'absolute',
+                top: 0,
+                opacity: 0,
+                'pointer-events': 'none',
+                'box-sizing': 'border-box'
+            })
+            
+            return node.node()
+        }
+        
+        function getSVGNode(el) {
+            el = el.node()
+            if(el.tagName.toLowerCase() == 'svg')
+            return el
+            
+            return el.ownerSVGElement
+        }
+        
+        // Private - gets the screen coordinates of a shape
+        //
+        // Given a shape on the screen, will return an SVGPoint for the directions
+        // n(north), s(south), e(east), w(west), ne(northeast), se(southeast), nw(northwest),
+        // sw(southwest).
+        //
+        //    +-+-+
+        //    |   |
+        //    +   +
+        //    |   |
+        //    +-+-+
+        //
+        // Returns an Object {n, s, e, w, nw, sw, ne, se}
+        function getScreenBBox() {
+            var targetel   = target || d3.event.target,
+            bbox       = {},
+            matrix     = targetel.getScreenCTM(),
+            tbbox      = targetel.getBBox(),
+            width      = tbbox.width,
+            height     = tbbox.height,
+            x          = tbbox.x,
+            y          = tbbox.y,
+            scrollEl   = document.documentElement? document.documentElement : document.body,
+            scrollTop  = scrollEl.scrollTop,
+            scrollLeft = scrollEl.scrollLeft
+            
+            
+            point.x = x + scrollLeft
+            point.y = y + scrollTop
+            bbox.nw = point.matrixTransform(matrix)
+            point.x += width
+            bbox.ne = point.matrixTransform(matrix)
+            point.y += height
+            bbox.se = point.matrixTransform(matrix)
+            point.x -= width
+            bbox.sw = point.matrixTransform(matrix)
+            point.y -= height / 2
+            bbox.w  = point.matrixTransform(matrix)
+            point.x += width
+            bbox.e = point.matrixTransform(matrix)
+            point.x -= width / 2
+            point.y -= height / 2
+            bbox.n = point.matrixTransform(matrix)
+            point.y += height
+            bbox.s = point.matrixTransform(matrix)
+            
+            return bbox
+        }
+        
+        return tip
+    };
+    
+})
+);
+
+function tooltipDirection(d, i) {
+    if (d == undefined) {
+        var text = d3.select(this).text();
+        if (text == "ArtistNet") return 's';
+        if (text == "Album Timeline") return 's';
+        return 'n';
+    }
+    if (d.y > 300) return 'n';
+    return 's';
+}
+
+function tooltipOffset(d, i) {
+    if (d == undefined) {
+        var text = d3.select(this).text();
+        if (text == "ArtistNet") return [18,55];
+        if (text == "Album Timeline") return [5,-1];
+        if (text == "Circle View") return [162,-358];
+        if (text == "Graph View") return [162,-359];
+        if (text == "Table View") return [162,-355];
+        if (text.substring(0,10) == "ArtistNet:") return [-10,0];;
+        return [14,-388]; // help image
+    }
+    if (d.y > 300) return [-10,0];
+    return [10,0];
+}
+
+// hoover tooltip
+
+var tip = d3.tip()
+.attr('class', 'd3-tip')
+.html(createTipContent)
+.direction(tooltipDirection)
+.offset(tooltipOffset);
+
+function getQuickHelp() {
+    var html;
+    if (charttype == "graph") {
+        html = "<h3>ArtistNet Quick Help for Graph View</h3>";
+        html = html + "<b>Define Period of Interest in Album Timeline</b><br>"
+        html = html + "Select album bar or click&drag in timeline axis to set time range. By reducing range in years of<br> selected albums the clarity of the graph view increases. Animate the visualized time range with <br>the start/step/stop buttons on the right side of the album timeline. <br>";
+        html = html + "<img width='460' src='http://www.metason.net/images/ArtistNet/AlbumTimeline.png'>";
+        html = html + "<br><br> <b>Filter by Musical Instrument, Genre, and Country</b><br>";
+        html = html + "Hover the mouse pointer over topics (instruments, genres, countries) in the charts on the left side <br>to highlight corresponding nodes in ArtistNet graph. Double-click on topics in charts to get more <br>details. Hover over nodes legend to highligt main artist, musicians, bands or albums.<br>";
+        html = html + "<img width='460' src='http://www.metason.net/images/ArtistNet/NodesFilter.jpg'>";
+        html = html + "<br><br><b>Interact with Graph Nodes</b><br>";
+        html = html + "Hover the mouse pointer over nodes to see details in a pop-up window. Move nodes across the <br> dashed lines to freeze node position. Double-click nodes to get more details.<br>";
+        html = html + "<img width='460' src='http://www.metason.net/images/ArtistNet/GraphTip.jpg'>";
+    }
+    if (charttype == "circle") {
+        html = "<h3>ArtistNet Quick Help for Circle View</h3>";
+        html = html + "<b>Define Period of Interest in Album Timeline</b><br>"
+        html = html + "Select album bar or click&drag in timeline axis to set time range. By reducing range in years of<br> selected albums the clarity of the circle view increases. Animate the visualized time range with <br>the start/step/stop buttons on the right side of the album timeline. <br>";
+        html = html + "<img width='460' src='http://www.metason.net/images/ArtistNet/AlbumTimeline.png'>";
+        html = html + "<br><br><b>Cluster Artists in Circle</b><br>";
+        html = html + "Use pull-down menu on the left to select sort order of artists in circle. The color coding of  <br>artists corresponds to the selected clustering.<br>";
+        html = html + "<img width='350' src='http://www.metason.net/images/ArtistNet/CircleFilter.png'>";
+        html = html + "<br><br> <b>Filter by Musical Instrument, Genre, and Country</b><br>";
+        html = html + "Hover the mouse pointer over topics (instruments, genres, countries) in the charts on the left side <br>to highlight corresponding artists in circle view. Double-click on topics in charts to get more details.";
+        html = html + "<br><br><b>Interact with Artists in Circle</b><br>";
+        html = html + "Hover the mouse pointer over artists to highlight their relations to other artists. <br>Double-click artist node to get more details.";
+        
+    }
+    if (charttype == "table") {
+        html = "<h3>ArtistNet Quick Help for Table View</h3>";
+        html = html + "<b>Define Period of Interest in Album Timeline</b><br>"
+        html = html + "Select album bar or click&drag in timeline axis to set time range. By reducing  <br>range in years of selected albums the clarity of the table view increases. <br>";
+        //html = html + "<img width='460' src='http://www.metason.net/images/ArtistNet/AlbumTimeline.png'><br>";
+        html = html + "<br> <b>Sort Table</b><br>";
+        html = html + "Click on arrow button in column header to sort table.";
+        
+    }
+    return html;
+}
+
+function getTitleContent() {
+    var html = "<h3>ArtistNet Visualization</h3>";
+    html = html + "<b>Discover Relations among Musicians</b><br>"
+    html = html + "ArtistNet provides insight in the network of<br>"
+    html = html + "musicians that has established by performing<br>"
+    html = html + "together with the main artist (shown on the<br>"
+    html = html + "top left) in bands and on albums.<br><br>"
+    html = html + "<b>Interactively Explore Musician Network</b><br>"
+    html = html + "Select and filter relations of artist's network<br>"
+    html = html + "by hover the mouse over items of interest.<br>"
+    html = html + "Dive deeper by double clicking on items.<br><br>"
+    html = html + "<b>Animate through Time</b><br>"
+    html = html + "ArtistNet let you follow the history of how<br>"
+    html = html + "main artist's network changed and grew over<br>"
+    html = html + "time. Either automatically animated or selected<br>"
+    html = html + "manually in the album timeline on the top.<br><br>"
+    html = html + "<b>Change Visualization Type</b><br>"
+    html = html + "Use the selection buttons in the toolbar on the<br>"
+    html = html + "top to switch between three views:"
+    html = html + "<ul> <li>Circle View</li> <li>Graph View</li> <li>Table View</li> </ul>"
+    html = html + "<b>Quick Help</b><br>"
+    html = html + "Hover mouse pointer over caption or over<br>"
+    html = html + "help icon to get a view-specific quick help.<br><br>"
+    return html;
+}
+
+function getTimelineContent() {
+    var html = "<h3>Album Timeline</h3>";
+    html = html + "<b>Released Albums per Year</b><br>"
+    html = html + "The album timeline shows the amount of released<br>"
+    html = html + "albums on which the main artist (shown on the top<br>"
+    html = html + "left) was involved. Hover over album bar to see <br>"
+    html = html + "album details in a pop-up window.<br><br>"
+    html = html + "<b>Select Time Range of Interest</b><br>"
+    html = html + "Click on an album bar to select corresponding year.<br>"
+    html = html + "Drag&drop in timeline axis to select time range of<br>"
+    html = html + "interest. Move or resize range selector.<br><br>"
+    html = html + "<b>Animate through Time</b><br>"
+    html = html + "Automatically animate through time with the buttons<br>"
+    html = html + "right from the timeline axis.<br><br>";
+    html = html + "&nbsp;&nbsp;&nbsp;<img src='http://www.metason.net/images/ArtistNet/icons/play.png' width='16' height='16'> Grow forward: increase time range into future<br>";
+    html = html + "&nbsp;&nbsp;&nbsp;<img src='http://www.metason.net/images/ArtistNet/icons/skip.png' width='16' height='16'> Step forward: move a year further<br>";
+    html = html + "&nbsp;&nbsp;&nbsp;<img src='http://www.metason.net/images/ArtistNet/icons/stop.png' width='16' height='16'> Stop animation<br>";
+    html = html + "&nbsp;&nbsp;&nbsp;<img src='http://www.metason.net/images/ArtistNet/icons/skipRev.png' width='16' height='16'> Step backward: move a year back<br>";
+    html = html + "&nbsp;&nbsp;&nbsp;<img src='http://www.metason.net/images/ArtistNet/icons/playRev.png' width='16' height='16'> Grow backward: increase time range into past<br><br>";
+    return html;
+}
+
+
+// ----------- set up the D3 visualisation area ------------------------------------------------------------------
+
+var svg = d3.select("body").append("svg")
+.attr("width", width + 20)
+.attr("height", height);
+
+svg.call(tip);
+
+var logText= "";
+var logField= svg.append("text")
+.attr("class", "log")
+.attr("id", "log")
+.attr("x", 5)
+.attr("y", chartheight + 86)
+.style("text-anchor", "top")
+.style("font-size", "10px")
+.text(logText);
+
+function log(str) {
+    logText= logText +" | " + str;
+    d3.select("#log").text(logText);
+}
+
+
+var legend= svg.append("g")
+.attr("class", "legend")
+.attr("id", "legend")
+.attr("transform", "translate(" + (164) + "," + (chartheight + 12) + ")");
+
+var g1= legend.append("g")
+.on('mouseover', distinguishRoot)
+.on('mouseout', defade)
+.on('touchstart', distinguishRoot)
+.on('touchend', defade);
+g1.append("circle")
+.attr("r", 8)
+.style("fill", rootColor);
+g1.append("text")
+.attr("dx", 11)
+.attr("dy", ".35em")
+.style("font-size", "10px")
+.style("font-family", "sans-serif")
+.text("Main Artist");
+
+g1= legend.append("g")
+.attr("transform", "translate(" + 0 + "," + 20 + ")")
+.on('mouseover', distinguishArtists)
+.on('mouseout', defade)
+.on('touchstart', distinguishArtists)
+.on('touchend', defade);
+g1.append("circle")
+.attr("r", 8)
+.style("fill", artistColor);
+g1.append("text")
+.attr("dx", 11)
+.attr("dy", ".35em")
+.style("font-size", "10px")
+.style("font-family", "sans-serif")
+.text("Musicians");
+
+g1= legend.append("g")
+.attr("transform", "translate(" + 0 + "," + 40 + ")")
+.on('mouseover', distinguishBands)
+.on('mouseout', defade)
+.on('touchstart', distinguishBands)
+.on('touchend', defade);
+g1.append("circle")
+.attr("r", 8)
+.style("fill", bandColor);
+g1.append("text")
+.attr("dx", 11)
+.attr("dy", ".35em")
+.style("font-size", "10px")
+.style("font-family", "sans-serif")
+.text("Bands");
+
+g1= legend.append("g")
+.attr("transform", "translate(" + 0 + "," + 60 + ")")
+.on('mouseover', distinguishAlbums)
+.on('mouseout', defade)
+.on('touchstart', distinguishAlbums)
+.on('touchend', defade);
+g1.append("circle")
+.attr("r", 8)
+.style("fill", albumColor);
+g1.append("text")
+.attr("dx", 11)
+.attr("dy", ".35em")
+.style("font-size", "10px")
+.style("font-family", "sans-serif")
+.text("Albums");
+
+svg.append("text")
+.attr("class", "caption")
+.attr("id", "caption")
+.attr("x", leftmargin + chartwidth/2)
+.attr("y", topmargin + chartheight - 4)
+.style("text-anchor", "middle")
+.style("font-size", "14px")
+.style("font-family","serif")
+.style("font-weight", "bold")
+.text("ArtistNet: Interactive Graph View")
+.on("mouseover", tip.show)
+.on("mouseout", tip.hide)
+.on('touchstart', tip.show)
+.on('touchend', tip.hide);
+
+var chart = svg.append("g")
+.attr("class", "chart")
+.attr("id", "chart")
+.attr("transform", "translate(" + leftmargin + "," + topmargin + ")");
+
+var graph = chart.append("g")
+.attr("class", "graph")
+.attr("id", "graph");
+
+graph.append("line")
+.attr("x1", function(d) { return leftfix; })
+.attr("y1", 0)
+.attr("x2", function(d) { return leftfix; })
+.attr("y2", function(d) { return chartheight; })
+.style("stroke-dasharray", ("3, 3"))
+.style("stroke-width", 1)
+.style("stroke", "lightgrey");
+
+graph.append("line")
+.attr("x1", function(d) { return chartwidth - rightfix; })
+.attr("y1", 0)
+.attr("x2", function(d) { return chartwidth - rightfix; })
+.attr("y2", function(d) { return chartheight; })
+.style("stroke-dasharray", ("3, 3"))
+.style("stroke-width", 1)
+.style("stroke", "lightgrey");
+
+var force = d3.layout.force()
+.size([chartwidth, chartheight])
+.gravity(.1)
+.linkDistance(function(d) { return 175 + linkDistance(d.type)*25; })
+.linkStrength(function(d) { return linkStrength(d.type); })
+.charge(-150)
+.chargeDistance(250);
+
+var curNodeList= nodeList.slice(),
+curLinkList= linkList.slice();
+
+var nodes = force.nodes(),
+links = force.links();
+
+// ----------- toggle between chart types ------------------------------------
+
+function setChartType(typeIdx) {
+    switch (typeIdx) {
+        case 1:
+        charttype= "circle";
+        if (graph != undefined) {
+            d3.select("#graph").style("display", "none");
+            d3.select("#graphSettings").style("display", "none");
+        }
+        if (table != undefined) d3.select("#table").style("display", "none");
+        if (circle == undefined) {
+            createChord();
+        }
+        if (circle != undefined) {
+            d3.select("#circle").style("display", "block");
+            d3.select("#circleSettings").style("display", "block");
+            d3.select("#clusterSettings").style("display", "block");
+            //updateChord();
+            update();
+        }
+        legend.style("display", "none");
+        d3.select("#caption").text("ArtistNet: Interactive Circle View");
+        d3.select("#chartTitle").text("Circle View");
+        break;
+        case 2:
+        charttype= "graph";
+        if (circle != undefined) {
+            d3.select("#circle").style("display", "none");
+            d3.select("#circleSettings").style("display", "none");
+            d3.select("#clusterSettings").style("display", "none");
+            legend.style("display", "block");
+        }
+        if (table != undefined) d3.select("#table").style("display", "none");
+        if (graph != undefined) {
+            d3.select("#graph").style("display", "block");
+            d3.select("#graphSettings").style("display", "block");
+        }
+        //updateGraph();
+        update();
+        d3.select("#caption").text("ArtistNet: Interactive Graph View");
+        d3.select("#chartTitle").text("Graph View");
+        break;
+        case 3:
+        charttype= "table";
+        if (graph != undefined) {
+            d3.select("#graph").style("display", "none");
+            d3.select("#graphSettings").style("display", "none");
+        }
+        if (circle != undefined) {
+            d3.select("#circle").style("display", "none");
+            d3.select("#circleSettings").style("display", "none");
+            d3.select("#clusterSettings").style("display", "none");
+        }
+        createTable();
+        if (table != undefined) d3.select("#table").style("display", "block");
+        legend.style("display", "none");
+        d3.select("#caption").text("ArtistNet: Table View");
+        d3.select("#chartTitle").text("Table View");
+        break;
+    }
+    layoutLines()
+    defade();
+}
+
+function layoutLines() {
+    if (charttype == "circle") {
+        line1.attr("x1", 153)
+        .attr("y1", 212)
+        .attr("x2", 175)
+        .attr("y2", 212);
+        if (clusterType == "Instrument") {
+            line2.attr("x1", 143)
+            .attr("y1", 301)
+            .attr("x2", 230)
+            .attr("y2", 301);
+            line3.attr("x1", 175)
+            .attr("y1", 212)
+            .attr("x2", 175)
+            .attr("y2", 301);
+            arrow.attr("refX", 230)
+            .attr("refY", 301);
+        }
+        if (clusterType == "Genre") {
+            line2.attr("x1", 143)
+            .attr("y1", 451)
+            .attr("x2", 230)
+            .attr("y2", 451);
+            line3.attr("x1", 175)
+            .attr("y1", 212)
+            .attr("x2", 175)
+            .attr("y2", 451);
+        }
+        if (clusterType == "Country") {
+            line2.attr("x1", 143)
+            .attr("y1", 601)
+            .attr("x2", 230)
+            .attr("y2", 601);
+            line3.attr("x1", 175)
+            .attr("y1", 212)
+            .attr("x2", 175)
+            .attr("y2", 601);
+        }
+    } else {
+        line1.attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", 0)
+        .attr("y2", 0);
+        line2.attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", 0)
+        .attr("y2", 0);
+        line3.attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", 0)
+        .attr("y2", 0);
+    }
+}
+
+// ----- chord / cicle view ---------------------------------------------------------------------------------------
+
+var chord_width = 560,
+chord_height = chord_width;
+
+var chord_artists,
+chord_matrix;
+
+var chord_arc,
+chord_layout,
+chord_path;
+
+function createChordData() {
+    chord_artists= [];
+    for(var j=0; j<curNodeList.length; j++) {
+        if (curNodeList[j].type == "root" || curNodeList[j].type == "artist") {
+            chord_artists.push(curNodeList[j]);
+        }
+    }
+    // sort according clusterType TODO: cluster by age
+    if (clusterType == "Instrument") {
+        chord_artists.sort(function(a,b) { return a.mainInstr < b.mainInstr ? -1 : a.mainInstr > b.mainInstr ? 1 : 0; });
+    }
+    if (clusterType == "Genre") {
+        chord_artists.sort(function(a,b) { return a.mainGenre < b.mainGenre ? -1 : a.mainGenre > b.mainGenre ? 1 : 0; });
+    }
+    if (clusterType == "Country") {
+        chord_artists.sort(function(a,b) { return a.country < b.country ? -1 : a.country > b.country ? 1 : 0; });
+    }
+    // create matrix
+    var cnt= chord_artists.length;
+    chord_matrix= [];
+    var val, row;
+    // initialize matrix
+    for(var i=0; i<cnt; i++) {
+        row= [];
+        for(var j=0; j<cnt; j++) {
+            row.push(0);
+        }
+        chord_matrix.push(row);
+    }
+    var albArtists, albID;
+    for(var k=0; k<curNodeList.length; k++) {
+        if (curNodeList[k].type == "album") {
+            albID= curNodeList[k].id;
+            albArtists= [];
+            for(var i=0; i<linkList.length; i++) {
+                if (linkList[i].type == "root-album" && linkList[i].target.id == albID) {
+                    albArtists.push(nodeOfID(linkList[i].source.id));
+                }
+                if (linkList[i].type == "album-artist" && linkList[i].source.id == albID) {
+                    var art= nodeOfID(linkList[i].target.id);
+                    if (art.type == "band") {
+                        for(var j=0; j<linkList.length; j++) {
+                            if (linkList[j].type == "band-artist" && linkList[j].source.id == art.id) {
+                                albArtists.push(nodeOfID(linkList[j].target.id));
+                            }
+                        }
+                    } else {
+                        albArtists.push(art);
+                    }
+                }
+            };
+            var iIdx, jIdx;
+            for(var i=0; i<albArtists.length; i++) {
+                iIdx= chord_artists.indexOf(albArtists[i]);
+                for(var j=0; j<albArtists.length; j++) {
+                    if (i != j) {
+                        jIdx= chord_artists.indexOf(albArtists[j]);
+                        if (iIdx >= 0 && jIdx >= 0 && iIdx != jIdx) {
+                            chord_matrix[iIdx][jIdx]= chord_matrix[iIdx][jIdx] + 1;
+                            chord_matrix[jIdx][iIdx]= chord_matrix[jIdx][iIdx] + 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Returns an event handler for fading a given chord group.
+function chord_fade(opacity) {
+    return function(d, i) {
+        if (opacity < 0.4) {
+            circle.selectAll(".group")
+            .filter(function(d) { return d.index == i; })
+            .selectAll(".cyltext")
+            .style("font-size", "12px")
+            .style("font-weight", "bold");
+        } else {
+            circle.selectAll(".group")
+            .filter(function(d) { return d.index == i; })
+            .selectAll(".cyltext")
+            .style("font-size", "10px")
+            .style("font-weight", "");
+        }
+        circle.selectAll(".chord")
+        .style("fill", function(d) { return chordColor(opacity, i, d.source.index, d.target.index); })
+        .filter(function(d) { return d.source.index != i && d.target.index != i; })
+        .style("stroke-opacity", opacity)
+        .style("opacity", opacity);
+    };
+}
+
+function groupColor(d, i) {
+    if (clusterType == "Instrument") {
+        var abbrev= instrAbbrev(chord_artists[i].mainInstr);
+        for (var i= 0; i<instrData.length;i++) {
+            if (abbrev == instrData[i].name) {
+                return instrColor(i);
+            }
+        }
+        return instrColor(0);
+    }
+    if (clusterType == "Genre") {
+        var abbrev= genreAbbrev(chord_artists[i].mainGenre);
+        if (abbrev.length == 0) abbrev= "unknown";
+        for (var i= 0; i<genreData.length;i++) {
+            if (abbrev == genreData[i].name) {
+                return genreColor(i);
+            }
+        }
+        return genreColor(0);
+    }
+    if (clusterType == "Country") {
+        var abbrev= chord_artists[i].country;
+        for (var i= 0; i<countryData.length;i++) {
+            if (abbrev == countryData[i].name) {
+                return countryColor(i);
+            }
+        }
+        return countryColor(0);
+    }
+}
+
+function chordColor(opacity, sel, i, j) {
+    if (opacity < 0.5) {
+        var abbrev;
+        if (clusterType == "Instrument") {
+            if (sel == i) {
+                abbrev= instrAbbrev(chord_artists[j].mainInstr);
+                for (var idx= 0; idx<instrData.length;idx++) {
+                    if (abbrev == instrData[idx].name) {
+                        return instrColor(idx);
+                    }
+                }
+            }
+            if (sel == j) {
+                abbrev= instrAbbrev(chord_artists[i].mainInstr);
+                for (var idx= 0; idx<instrData.length;idx++) {
+                    if (abbrev == instrData[idx].name) {
+                        return instrColor(idx);
+                    }
+                }
+            }
+        }
+        if (clusterType == "Genre") {
+            if (sel == i) {
+                abbrev= genreAbbrev(chord_artists[j].mainGenre);
+                if (abbrev.length == 0) abbrev= "unknown";
+                for (var idx= 0; idx<genreData.length;idx++) {
+                    if (abbrev == genreData[idx].name) {
+                        return genreColor(idx);
+                    }
+                }
+            }
+            if (sel == j) {
+                abbrev= genreAbbrev(chord_artists[i].mainGenre);
+                for (var idx= 0; idx<genreData.length;idx++) {
+                    if (abbrev == genreData[idx].name) {
+                        return genreColor(idx);
+                    }
+                }
+            }
+        }
+        if (clusterType == "Country") {
+            if (sel == i) {
+                abbrev= chord_artists[j].country;
+                for (var idx= 0; idx<countryData.length;idx++) {
+                    if (abbrev == countryData[idx].name) {
+                        return countryColor(idx);
+                    }
+                }
+            }
+            if (sel == j) {
+                abbrev= chord_artists[i].country;
+                for (var idx= 0; idx<countryData.length;idx++) {
+                    if (abbrev == countryData[idx].name) {
+                        return countryColor(idx);
+                    }
+                }
+            }
+        }
+    }
+    return chordDefColor;
+}
+
+
+function updateChord() {
+    // get data
+    createChordData();
+    
+    // Compute the chord layout.
+    chord_layout.matrix(chord_matrix);
+    
+    circle.selectAll(".group").remove();
+    var group = circle.selectAll(".group")
+    .data(chord_layout.groups)
+    .enter().append("g")
+    .attr("class", "group")
+    .on("mouseover", chord_fade(.2))
+    .on("mouseout", chord_fade(1))
+    .on('touchstart', chord_fade(.2))
+    .on('touchend', chord_fade(1))
+    .on('dblclick', function(d) { showNode(chord_artists[d.index].id); });
+    
+    // Add a mouseover title.
+    group.append("title").text(function(d, i) { var txt= chord_artists[i].name; if (chord_artists[i].desc.length > 0) txt= txt+ "\n" + chord_artists[i].desc; return txt; });
+    
+    // Add the group arc.
+    var groupPath = group.append("path")
+    .attr("id", function(d, i) { return "group" + i; })
+    .attr("d", chord_arc)
+    .style("fill", groupColor);
+    
+    // Add a text label.
+    var groupText = group.append("text")
+    .attr("x", 6)
+    .attr("dy", 12)
+    .style("fill","white");
+    
+    // Add cylindric labels
+    group.append("text")
+    .each(function(d) { d.angle = (d.startAngle + d.endAngle) / 2; })
+    .attr("class", "cyltext")
+    .attr("dy", ".35em")
+    .attr("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+    .attr("transform", function(d) {
+        return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+        + "translate(" + (220) + ")"
+        + (d.angle > Math.PI ? "rotate(180)" : "");
+    })
+    .text(function(d, i) { return chord_artists[i].name; });
+    
+    groupText.append("textPath")
+    .attr("xlink:href", function(d, i) { return "#group" + i; })
+    .attr('pointer-events', 'none')
+    .text(function(d, i) { return chord_artists[i].name; });
+    
+    // Remove the labels that don't fit.
+    groupText.filter(function(d, i) { return groupPath[0][i].getTotalLength() / 2 - 23 < this.getComputedTextLength(); })
+    .remove();
+    
+    
+    circle.selectAll(".chord").remove();
+    // Add the chords.
+    var chord = circle.selectAll(".chord")
+    .data(chord_layout.chords)
+    .enter().append("path")
+    .attr("class", "chord")
+    .style("stroke", "#000")
+    .style("stroke-width", ".25px")
+    .style("stroke-opacity", 1)
+    .style("opacity", 1)
+    //.style("fill", artistColor)
+    .style("fill", chordDefColor)
+    .attr("d", chord_path);
+    
+    // Add  mouseover title for each chord.
+    chord.append("title").text(function(d) {
+        var txt;
+        txt= chord_artists[d.source.index].name
+        + " ↔︎ " + chord_artists[d.target.index].name;
+        if (chord_matrix[d.source.index][d.target.index] > 2) {
+            txt= txt + "\n" + chord_matrix[d.source.index][d.target.index]/2 + "x";
+        }
+        return txt;
+    });
+}
+
+function createChord() {
+    var chord_outerRadius = Math.min(chord_width, chord_height) / 2 - 62,
+    chord_innerRadius = chord_outerRadius - 18;
+    
+    chord_arc = d3.svg.arc()
+    .innerRadius(chord_innerRadius)
+    .outerRadius(chord_outerRadius);
+    
+    chord_layout = d3.layout.chord()
+    .padding(.04);
+    //    .sortSubgroups(d3.descending);
+    //    .sortGroups(function(a, b) { return 1); });
+    //        .sortChords(d3.ascending);
+    
+    chord_path = d3.svg.chord()
+    .radius(chord_innerRadius);
+    
+    circle = chart.append("g")
+    .attr("id", "circle")
+    .attr("transform", "translate(" + (chord_width/2 + 120) + "," + chord_height / 2 + ")");
+    
+    //    circle.append("circle")
+    //        .attr("r", chord_outerRadius);
+    
+    circleSettings = svg.append("foreignObject")
+    .attr("class", "circleSettings")
+    .attr("id", "circleSettings")
+    .attr("x", width-110)
+    .attr("y", 6)
+    .attr("width", 140)
+    .attr("height", 140)
+    .append("xhtml:body")
+    .html(createCircleSettingsContent);
+    
+    clusterSettings = svg.append("foreignObject")
+    .attr("class", "clusterSettings")
+    .attr("id", "clusterSettings")
+    .attr("x", -2)
+    .attr("y", 200)
+    .attr("width", 220)
+    .attr("height", 40)
+    .append("xhtml:body")
+    .html(createClusterSettingsContent);
+    
+    arrow= svg.insert("marker", ":first-child")
+    .attr("id", "arrowGrey")
+    .attr("viewBox", "0 0 10 10")
+    .attr("refX", "10")
+    .attr("refY", "5")
+    .attr("markerUnits", "strokeWidth")
+    .attr("markerWidth", "10")
+    .attr("markerHeight", "5")
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", "M 0 0 L 10 5 L 0 10 z")
+    .attr("fill", "#AAA");
+    
+    line1= svg.insert("line", ":first-child")
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", 0)
+    .attr("y2", 0)
+    .style("stroke-width", 1)
+    .style("stroke", "lightgrey");
+    line2= svg.insert("line", ":first-child")
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", 0)
+    .attr("y2", 0)
+    .style("stroke-width", 1)
+    .style("stroke", "lightgrey")
+    .attr("marker-end", "url(#arrowGrey)");
+    line3= svg.insert("line", ":first-child")
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", 0)
+    .attr("y2", 0)
+    .style("stroke-width", 1)
+    .style("stroke", "lightgrey");
+    
+    
+}
+
+
+// ----- table -------------------------------------------------------------------------------------------
+
+var table_data;
+
+function createTableData() {
+    table_data= [];
+    for(var j=0 ; j<curNodeList.length;j++){
+        table_data.push([ curNodeList[j].name, curNodeList[j].desc, curNodeList[j].type, curNodeList[j].genre /*, curNodeList[j].webURL,  curNodeList[j].relevance */ ]);
+    }
+}
+
+function createTable() {
+    if (table == undefined) {
+        var topOffset;
+        if (webMode == "embedded") {
+            topOffset= "-583px";
+        } else {
+            topOffset= "-618px";
+        }
+        table= d3.select("body")
+        .append("div")
+        .attr("id", "table")
+        .style("position", "relative")
+        .style("top", topOffset)
+        .style("left", "170px");
+    }
+    var column_array= [
+    { text: 'Name', sort: TableSort.alphabetic },
+    { text: 'Descr.', sort: TableSort.alphabetic },
+    { text: 'Type', sort: TableSort.alphabetic },
+    { text: 'Genre', sort: TableSort.alphabetic },
+    //                       { text: 'URL', sort: false },
+    //                       { text: 'Relevance', sort: TableSort.numeric },
+    ];
+    
+    createTableData();
+    
+    TableSort("#table",
+    column_array,
+    table_data,
+    { width: '720px', height: '580px' }
+    );
+}
+
+// ----------- update functions to generate chart ------------------------------------
+
+var update = function () {
+    if (charttype == "graph") {
+        updateGraph();
+        // tweak layout
+        if (withRoot) {
+            for(var j=0 ; j<curNodeList.length;j++){
+                if(curNodeList[j].id == 0) {
+                    curNodeList[j].x= curNodeList[j].px= chartwidth/2;
+                    curNodeList[j].y= curNodeList[j].py= chartheight/2;
+                    curNodeList[j].fixed = true;
+                    break;
+                }
+            }
+        }
+    }
+    if (charttype == "circle") {
+        updateChord();
+    }
+    if (charttype == "table") {
+        createTable();
+    }
+    updateTimeline();
+    updateInstruments();
+    updateGenres();
+    updateCountries();
+}
+
+
+function nodeMouseClick(d, i) {
+    var b= false;
+    if (d.id == 0) {
+        b= true;
+    }
+    if (d.x < leftfix || d.x > chartwidth - rightfix) {
+        b= true;
+    }
+    d.fixed= b;
+}
+
+// ----------- node / graph view --------------------------------------------------
+
+var updateGraph = function () {
+    
+    var link = graph.selectAll(".link")
+    .data(curLinkList, function(d) { return d.source.id + "-" + d.target.id; });
+    
+    link.enter().insert("line", ":first-child")
+    .attr("class", "link")
+    .style("stroke", function(d) { return linkColor(d.type); })
+    .style("stroke-opacity", "0.25")
+    .style("stroke-width", function(d) { return linkSize(d.type); });
+    
+    link.exit().remove();
+    
+    var node = graph.selectAll("g.node")
+    .data(curNodeList, function(d) { return d.id; });
+    
+    
+    var nodeEnter = node.enter().insert("g")
+    .attr("class", "node")
+    .call(force.drag);
+    
+    nodeEnter.append("circle")
+    .attr("class", "node")
+    .attr("r", function(d, i) { var ra= nodeSize(d.type); if (d.type == "artist") ra= ra+(d.relevance*10/maxRelevance); if (d.type == "band") ra= ra+(d.totalAlb*8/maxAlbums); return ra; })
+    .attr("id",function(d) { return d.id; })
+    .style("fill", function(d) { return nodeColor(d.type); })
+    .style("stroke", "#fff")
+    .style("stroke-width", "2.5px")
+    .on("click", nodeMouseClick)
+    .on('mouseover', tip.show)
+    .on('mouseout', tip.hide)
+    .on('touchstart', tip.show)
+    .on('touchend', function() { tip.hide; nodeMouseClick; })
+    .on('dblclick', function(d) { showNode(d.id); });
+    
+    nodeEnter.append("text")
+    .attr("class","text")
+    .attr("dx", function(d, i) { var ra= nodeSize(d.type); if (d.type == "artist") ra= ra+(d.relevance*10/maxRelevance); if (d.type == "band") ra= ra+(d.totalAlb*8/maxAlbums); return ra; })
+    .attr("dy", ".35em")
+    .attr('pointer-events', 'none')
+    .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+    .style("font-family","sans-serif")
+    .text(function(d) { return d.name; });
+    
+    node.exit().remove();
+    
+    force.on("tick", function() {
+        link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+        node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    });
+    
+    // Restart the force layout; will evaluate all properties
+    force.start();
+    
+}
+
+// data filter manipulating model (map from nodeList & linkLst to curNodeList & curLinkList)
+
+function nodeOfID(id) {
+    var len = nodeList.length
+    while (len--) {
+        if (nodeList[len].id == id) {
+            return nodeList[len];
+        }
+    }
+    return 0;
+}
+
+function instrAbbrev(str) {
+    var len = nodeList.length
+    while (len--) {
+        if (nodeList[len].type == "instrument" && nodeList[len].name == str) {
+            return nodeList[len].abbrev;
+        }
+    }
+    return "";
+}
+
+function genreAbbrev(str) {
+    var len = nodeList.length
+    while (len--) {
+        if (nodeList[len].type == "genre" && nodeList[len].abbrev == str) {
+            return nodeList[len].abbrev;
+        }
+    }
+    return "";
+}
+
+
+function removeNode(n) {
+    var idx= curNodeList.indexOf(n);
+    if (idx >= 0) {
+        removeLinksToNode(n);
+        curNodeList.splice(idx,1);
+    }
+}
+
+function addNode(n) {
+    var idx= curNodeList.indexOf(n);
+    if (idx >= 0) {
+        return; // already there
+    }
+    var insertIdx= 0;
+    if (n.id == 0) {
+        insertIdx= 0;
+    } else {
+        insertIdx= curNodeList.length;
+    }
+    curNodeList.splice(insertIdx,0,n);
+    addLinksToNode(n);
+}
+
+function removeLink(l) {
+    var idx= curLinkList.indexOf(l);
+    if (idx >= 0) {
+        curLinkList.splice(idx,1);
+    }
+}
+
+function addLink(l) {
+    var idx= curLinkList.indexOf(l);
+    if (idx >= 0) {
+        return; // already there
+    }
+    var insertIdx= curLinkList.length;;
+    curLinkList.splice(insertIdx,0,l);
+}
+
+function removeLinksToNode(n) {
+    var len = curLinkList.length
+    while (len--) {
+        if ((curLinkList[len].source.id == n.id) || (curLinkList[len].target.id == n.id)) {
+            removeLink(curLinkList[len]);
+        }
+    }
+}
+
+function addLinksToNode(n) {
+    var len = linkList.length
+    while (len--) {
+        if ((linkList[len].source.id == n.id) || (linkList[len].target.id == n.id)) {
+            addLink(linkList[len]);
+        }
+    }
+}
+
+function filterData() {
+    var idx;
+    var len, len2;
+    var node;
+    var posNodes= [];
+    
+    // handle root
+    if (withRoot) {
+        posNodes.push(nodeList[0]);
+    }
+    // handle root-band and root-artist (=artist-artist) links
+    len2 = linkList.length
+    while (len2--) {
+        if (linkList[len2].type == "root-band" && linkList[len2].source.id == nodeList[0].id && lowerYear < minYear) {
+            idx= posNodes.indexOf(linkList[len2].target);
+            if (idx < 0) {
+                posNodes.push(linkList[len2].target);
+            }
+        }
+        if (linkList[len2].type == "artist-artist" && linkList[len2].source.id == nodeList[0].id && withRoot) {
+            idx= posNodes.indexOf(linkList[len2].target);
+            if (idx < 0) {
+                posNodes.push(linkList[len2].target);
+            }
+        }
+    }
+    // add albums in time range to posNodes
+    len = nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "album") {
+            if ((nodeList[len].year == 0 && lowerYear < minYear) || (nodeList[len].year >= lowerYear && nodeList[len].year < upperYear)) {
+                idx= posNodes.indexOf(nodeList[len]);
+                if (idx < 0) {
+                    posNodes.push(nodeList[len]); // pos album
+                }
+            }
+        }
+    }
+    // resolve artists from album
+    len = posNodes.length;
+    while (len--) {
+        if (posNodes[len].type == "album") {
+            len2 = linkList.length
+            while (len2--) { // now add album artists
+                if (linkList[len2].type == "album-artist" && linkList[len2].source.id == posNodes[len].id) {
+                    idx= posNodes.indexOf(linkList[len2].target);
+                    if (idx < 0) {
+                        posNodes.push(linkList[len2].target);
+                    }
+                }
+            }
+        }
+    }
+    // resolve artists from bands
+    len = posNodes.length;
+    while (len--) {
+        if (posNodes[len].type == "band") {
+            len2 = linkList.length
+            while (len2--) { // now add band members
+                if (linkList[len2].type == "band-artist" && linkList[len2].source.id == posNodes[len].id) {
+                    idx= posNodes.indexOf(linkList[len2].target);
+                    if (idx < 0) {
+                        posNodes.push(linkList[len2].target);
+                    }
+                }
+            }
+        }
+    }
+    // handle instruments
+    if (withInstruments) {
+        len = nodeList.length;
+        while (len--) {
+            if (nodeList[len].type == "instrument") {
+                posNodes.push(nodeList[len]);
+            }
+        }
+    }
+    // remove nodes in curNodesList that are not in posNodes
+    len = curNodeList.length;
+    while (len--) {
+        idx= posNodes.indexOf(curNodeList[len]);
+        if (idx < 0) {
+            removeNode(curNodeList[len]);
+        }
+    }
+    // add pos nodes
+    len = posNodes.length;
+    while (len--) {
+        addNode(posNodes[len]);
+    }
+    // clean links
+    len2 = linkList.length
+    while (len2--) { // now add album artists
+        if (posNodes.indexOf(linkList[len2].source) >= 0 && posNodes.indexOf(linkList[len2].target) >= 0) {
+            addLink(linkList[len2]);
+        } else {
+            removeLink(linkList[len2]);
+        }
+    }
+}
+
+// ------- GUI Functions ---------------------------------------------------------------------------
+
+function createPanelContent() {
+    var html= "";
+    if (nodeList[0].imgURL.length > 0) {
+        html= html + "<img src='" + nodeList[0].imgURL +"' height='100' width='auto'><br>";
+    }
+    html= html + "<strong>" + nodeList[0].name + "</strong><br>";
+    html= html + "<span style='color:grey'>" + nodeList[0].desc + "</span><br><br>";
+    return html;
+}
+
+function createGraphSettingsContent() {
+    var html= "";
+    html= html + "<input type='checkbox' id='showRootGraph' onclick='doShowRoot()' checked> display main artist<br>\r";
+    html= html + "<input type='checkbox' id='albumLabel' onclick='doAlbumLabel()' checked> show album labels<br>\r";
+    html= html + "<input type='checkbox' id='bandLabel' onclick='doBandLabel()' checked> show band labels<br>";
+    html= html + "<hr>&nbsp;&nbsp;&nbsp;";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/play.png' width='16' height='16' id='start' onclick='doPlay()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/skip.png' width='16' height='16' id='start' onclick='doSkip()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/stop.png' width='16' height='16' id='start' onclick='doStopPlay()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/skipRev.png' width='16' height='16' id='start' onclick='doSkipRev()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/playRev.png' width='16' height='16' id='start' onclick='doPlayRev()'> ";
+    return html;
+}
+
+function createCircleSettingsContent() {
+    var html= "";
+    html= html + "<input type='checkbox' id='showRootCircle' onclick='doShowRoot()' checked> display main artist<br>\r";
+    html= html + "<div style='height:36px;width:160px;'> </div>\r";
+    html= html + "<hr>&nbsp;&nbsp;&nbsp;";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/play.png' width='16' height='16' id='start' onclick='doPlay()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/skip.png' width='16' height='16' id='start' onclick='doSkip()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/stop.png' width='16' height='16' id='start' onclick='doStopPlay()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/skipRev.png' width='16' height='16' id='start' onclick='doSkipRev()'> ";
+    html= html + "<input type='image' src='http://www.metason.net/images/ArtistNet/icons/playRev.png' width='16' height='16' id='start' onclick='doPlayRev()'> ";
+    return html;
+}
+
+function createClusterSettingsContent() {
+    var html= "";
+    html= html + "Cluster by ";
+    html= html + "<select id='clusterSelector' onchange='doSelectCluster()'>";
+    html= html + "<option>Instrument</option>";
+    html= html + "<option>Genre</option>";
+    html= html + "<option>Country</option>";
+    html= html + "</select><br>";
+    return html;
+}
+
+function createTipContent(d,i) {
+    if(d == undefined) {
+        var text = d3.select(this).text();
+        if (text == "ArtistNet") return getTitleContent;
+        if (text == "Album Timeline") return getTimelineContent;
+        return getQuickHelp;
+    }
+    var html= "";
+    if (d.type == undefined) {
+        if (d.index != undefined) { // group of circle view
+            html= html + "<strong>" + chord_artists[d.index].name + "</strong><br>";
+            html= html + "<span style='color:grey'>" + chord_artists[d.index].desc + "</span>";
+        } else { // time bar
+            var yearData= getYear(minYear + i -1);
+            var cnt= 0;
+            for(var i=0 ; i<nodeList.length;i++){
+                if (nodeList[i].type == "album" && nodeList[i].year == yearData.year) {
+                    if (cnt  > 0) {
+                        html= html + "<br>";
+                    }
+                    if (nodeList[i].imgURL.length > 0) {
+                        if (false && webMode == "browser" && nodeList[i].imgURL.indexOf("pixogs") != -1) {
+                            // sorry, we are not allowed to hotlink discogs/pixogs images
+                        } else {
+                            html= html + "<img src='" + nodeList[i].imgURL +"' height='100' width='auto' ><br>";
+                        }
+                    }
+                    html= html + "<strong>" + nodeList[i].name + "</strong><br>";
+                    html= html + "<span style='color:grey'>" + nodeList[i].artist + "</span><br>";
+                    html= html + "<span style='color:grey'>" + nodeList[i].desc + "</span><br>";
+                    cnt =  cnt + 1;
+                }
+            }
+        }
+    } else {
+        if (d.imgURL.length > 0) {
+            if (false && webMode == "browser" && d.imgURL.indexOf("pixogs") != -1) {
+                // sorry, we are not allowed to hotlink discogs/pixogs images
+            } else {
+                html= html + "<img src='" + d.imgURL +"' height='100' width='auto' ><br>";
+            }
+        }
+        html= html + "<strong>" + d.name + "</strong><br>";
+        if (d.type == "album" && d.artist != undefined) {
+            html= html + "<span style='color:grey'>" + d.artist + "</span><br>";
+        }
+        html= html + "<span style='color:grey'>" + d.desc + "</span>";
+    }
+    return html;
+}
+
+var animTimer;
+var animInterval= 1250;
+
+function nextUpper(year) {
+    var len= timelineData.length;
+    for(var idx= 0; idx < len; idx++) {
+        if (timelineData[idx].year >= year) {
+            return timelineData[idx].year + 1;
+        }
+    }
+    return year;
+}
+
+function prevLower(year) {
+    var len= timelineData.length;
+    while(len--) {
+        if (timelineData[len].year < year) {
+            return timelineData[len].year;
+        }
+    }
+    return year;
+}
+
+function play() {
+    if (animate) {
+        if (upperYear < maxYear) {
+            animTimer= setTimeout(play, animInterval);
+        } else {
+            animate= false;
+        }
+    } else {
+        return;
+    }
+    upperYear= nextUpper(upperYear);
+    var extent1 = [0,0];
+    extent1[0]= lowerYear;
+    extent1[1]= upperYear;
+    gBrush.transition().call(brush.extent(extent1));
+    filterData();
+    update();
+}
+
+function doPlay() {
+    if (animate) {
+        clearTimeout(animTimer);
+    }
+    if (lowerYear < minYear) {
+        lowerYear= minYear;
+    }
+    upperYear= lowerYear;
+    tl_view.select("g.timecontrol").attr("opacity", 0);
+    animate= true;
+    play();
+}
+
+function playRev() {
+    if (animate) {
+        if (lowerYear -1 > minYear) {
+            animTimer= setTimeout(playRev, animInterval);
+        } else {
+            animate= false;
+        }
+    } else {
+        return;
+    }
+    lowerYear= prevLower(lowerYear);
+    var extent1 = [0,0];
+    extent1[0]= lowerYear;
+    extent1[1]= upperYear;
+    gBrush.transition().call(brush.extent(extent1));
+    filterData();
+    update();
+}
+
+function doPlayRev() {
+    if (animate) {
+        clearTimeout(animTimer);
+    }
+    lowerYear= upperYear;
+    tl_view.select("g.timecontrol").attr("opacity", 0);
+    animate= true;
+    playRev();
+}
+
+function skip() {
+    if (animate) {
+        if (upperYear < maxYear) {
+            animTimer= setTimeout(skip, animInterval);
+        } else {
+            animate= false;
+        }
+    } else {
+        return;
+    }
+    upperYear= nextUpper(upperYear);
+    lowerYear= upperYear - 1;
+    var extent1 = [0,0];
+    extent1[0]= lowerYear;
+    extent1[1]= upperYear;
+    gBrush.transition().call(brush.extent(extent1));
+    filterData();
+    update();
+}
+
+function doSkip() {
+    if (animate) {
+        clearTimeout(animTimer);
+    }
+    if (lowerYear >= minYear) {
+        lowerYear= lowerYear - 1;
+    }
+    upperYear= lowerYear+1;
+    tl_view.select("g.timecontrol").attr("opacity", 0);
+    animate= true;
+    skip();
+}
+
+function skipRev() {
+    if (animate) {
+        if (lowerYear -1 > minYear) {
+            animTimer= setTimeout(skipRev, animInterval);
+        } else {
+            animate= false;
+        }
+    } else {
+        return;
+    }
+    lowerYear= prevLower(lowerYear);
+    upperYear= lowerYear + 1;
+    var extent1 = [0,0];
+    extent1[0]= lowerYear;
+    extent1[1]= upperYear;
+    gBrush.transition().call(brush.extent(extent1));
+    filterData();
+    update();
+}
+
+function doSkipRev() {
+    if (animate) {
+        clearTimeout(animTimer);
+    }
+    upperYear= upperYear + 1;
+    lowerYear= upperYear - 1;
+    tl_view.select("g.timecontrol").attr("opacity", 0);
+    animate= true;
+    skipRev();
+}
+
+function doStopPlay() {
+    if (animTimer) clearTimeout(animTimer);
+    if (animate) {
+        animate= false;
+    }
+}
+
+function doShowRoot() {
+    withRoot= !withRoot;
+    document.getElementById("showRootGraph").checked= withRoot;
+    document.getElementById("showRootCircle").checked= withRoot;
+    filterData();
+    update();
+}
+
+function doSelectCluster() {
+    var mylist=document.getElementById("clusterSelector");
+    clusterType= mylist.options[mylist.selectedIndex].text;
+    filterData();
+    update();
+    layoutLines();
+}
+
+
+function labelVisibility(d) {
+    if (d.type == "album" && !showAlbumLabel) {
+        return 0;
+    }
+    if (d.type == "band" && !showBandLabel) {
+        return 0;
+    }
+    return 1;
+}
+
+function doAlbumLabel() {
+    showAlbumLabel= !showAlbumLabel;
+    graph.selectAll("g.node")
+    .select('text')
+    .attr('opacity',labelVisibility);
+}
+
+function doBandLabel() {
+    showBandLabel= !showBandLabel;
+    graph.selectAll("g.node")
+    .select('text')
+    .attr('opacity',labelVisibility);
+}
+
+function instrFullName(abbrev) {
+    for(var i=0; i<nodeList.length;i++){
+        if (nodeList[i].type == "instrument" && nodeList[i].abbrev == abbrev) {
+            return nodeList[i].name;
+        }
+    }
+    return "unknown";
+}
+
+function countryFullName(abbrev) {
+    for(var i=0 ; i<nodeList.length;i++){
+        if (nodeList[i].type == "country" && nodeList[i].abbrev == abbrev) {
+            return nodeList[i].name;
+        }
+    }
+    return "unknown";
+}
+
+function genreFullName(abbrev) {
+    for(var i=0 ; i<nodeList.length;i++){
+        if (nodeList[i].type == "genre" && nodeList[i].abbrev == abbrev) {
+            return nodeList[i].name;
+        }
+    }
+    return "unknown";
+}
+
+function strContainsTag(str, tag) {
+    if (str == undefined || tag == undefined) return false;
+    if (str == tag) return true;
+    if (tag.length > 0 && str.indexOf(tag+",") != -1) return true;
+    if (tag.length > 0 && str.length > tag.length + 2 && str.substring(str.length - tag.length - 2, str.length) == ", "+tag) return true;
+    return false;
+}
+
+function distinguishInstrument (ins) {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return !strContainsTag(d.instr, ins.data.name); })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return !strContainsTag(d.instr, ins.data.name); })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return strContainsTag(d.instr, ins.data.name); })
+        .selectAll("text")
+        .style("font-size", function(d) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+    if (charttype == "circle") {
+        circle.selectAll(".group")
+        .filter(function(d) { return strContainsTag(chord_artists[d.index].instr, ins.data.name); })
+        .selectAll(".cyltext")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+        circle.selectAll(".chord")
+        .filter(function(d) { return !(strContainsTag(chord_artists[d.source.index].instr, ins.data.name) || strContainsTag(chord_artists[d.target.index].instr, ins.data.name)); })
+        .style("stroke-opacity", .2)
+        .style("opacity", .2);
+    }
+    onInstr.text(instrFullName(ins.data.name));
+    for (var idx= 0; idx<instrData.length; idx++) {
+        if (ins.data.name == instrData[idx].name) {
+            innerInstr.style("fill", function(d, i) { return instrColor(idx); });
+        }
+    }
+}
+
+function distinguishGenre (gen) {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.mainGenre == undefined || gen.data.name != d.mainGenre; })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.mainGenre == undefined || gen.data.name != d.mainGenre; })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.mainGenre != undefined && (gen.data.name == d.mainGenre || strContainsTag(d.genre, gen.data.name)); })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+    if (charttype == "circle") {
+        circle.selectAll(".group")
+        .filter(function(d) { return chord_artists[d.index].mainGenre != undefined && gen.data.name == chord_artists[d.index].mainGenre; })
+        .selectAll(".cyltext")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+        circle.selectAll(".chord")
+        //.filter(function(d) { return chord_artists[d.source.index].mainGenre == undefined || gen.data.name != chord_artists[d.source.index].mainGenre; })
+        .filter(function(d) { return gen.data.name != chord_artists[d.source.index].mainGenre && gen.data.name != chord_artists[d.target.index].mainGenre; })
+        .style("stroke-opacity", .2)
+        .style("opacity", .2);
+    }
+    onGenre.text(genreFullName(gen.data.name));
+    for (var idx= 0; idx<genreData.length; idx++) {
+        if (gen.data.name == genreData[idx].name) {
+            innerGenre.style("fill", function(d, i) { return genreColor(idx); });
+        }
+    }
+}
+
+function distinguishCountry (c) {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.country == undefined || c.data.name != d.country; })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.country == undefined || c.data.name != d.country; })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.country != undefined && c.data.name == d.country; })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+    if (charttype == "circle") {
+        circle.selectAll(".group")
+        .filter(function(d) { return chord_artists[d.index].country != undefined && c.data.name == chord_artists[d.index].country; })
+        .selectAll(".cyltext")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+        circle.selectAll(".chord")
+        //.filter(function(d) { return chord_artists[d.source.index].country == undefined || c.data.name != chord_artists[d.source.index].country; })
+        .filter(function(d) { return c.data.name != chord_artists[d.source.index].country && c.data.name != chord_artists[d.target.index].country; })
+        .style("stroke-opacity", .2)
+        .style("opacity", .2);
+    }
+    onCountry.text(countryFullName(c.data.name));
+    for (var idx= 0; idx<countryData.length; idx++) {
+        if (c.data.name == countryData[idx].name) {
+            innerCountry.style("fill", function(d, i) { return countryColor(idx); });
+        }
+    }
+}
+
+function distinguishRoot () {
+    if (!withRoot) return;
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.id != 0; })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.id != 0; })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.id == 0; })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+    if (charttype == "circle") {
+        circle.selectAll(".group")
+        .filter(function(d) { return chord_artists[d.index].id == 0; })
+        .selectAll(".cyltext")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+        circle.selectAll(".chord")
+        .filter(function(d) { return !(chord_artists[d.source.index].id == 0 || chord_artists[d.target.index].id == 0); })
+        .style("stroke-opacity", .2)
+        .style("opacity", .2);
+    }
+}
+
+function distinguishArtists () {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type != "artist"; })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type != "artist"; })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type == "artist"; })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+}
+
+function distinguishBands () {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type != "band"; })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type != "band"; })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type == "band"; })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+}
+
+function distinguishAlbums () {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type != "album"; })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type != "album"; })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return d.type == "album"; })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+}
+
+function defade (d) {
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .selectAll("circle")
+        .attr('fill-opacity',1);
+        graph.selectAll("g.node")
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "")
+        .attr('opacity',labelVisibility);
+    }
+    if (charttype == "circle") {
+        circle.selectAll(".group")
+        .selectAll(".cyltext")
+        .style("font-size", "10px")
+        .style("font-weight", "");
+        circle.selectAll(".chord")
+        .style("stroke-opacity", 1)
+        .style("opacity", 1);
+    }
+    onInstr.text("");
+    innerInstr.style("fill", "white");
+    onGenre.text("");
+    innerGenre.style("fill", "white");
+    onCountry.text("");
+    innerCountry.style("fill", "white");
+}
+
+function doSearch (str) {
+    defade();
+    if (str.length == 0) return;
+    if (charttype == "graph") {
+        graph.selectAll("g.node")
+        .filter(function(d) { return !(d.name.indexOf(str) >= 0 || d.genre.indexOf(str) >= 0 || d.desc.indexOf(str) >= 0); })
+        .selectAll("circle")
+        .attr('fill-opacity',0.4);
+        graph.selectAll("g.node")
+        .filter(function(d) { return !(d.name.indexOf(str) >= 0 || d.genre.indexOf(str) >= 0 || d.desc.indexOf(str) >= 0); })
+        .selectAll("text")
+        .attr('opacity',function(d) { return 0.4 * labelVisibility(d); });
+        graph.selectAll("g.node")
+        .filter(function(d) { return (d.name.indexOf(str) >= 0 || d.genre.indexOf(str) >= 0 || d.desc.indexOf(str) >= 0); })
+        .selectAll("text")
+        .style("font-size", function(d, i) { return nodeFontSize(d.type); })
+        .style("font-weight", "bold");
+    }
+    if (charttype == "circle") {
+        circle.selectAll(".group")
+        .filter(function(d) { return (chord_artists[d.index].name.indexOf(str) >= 0); })
+        .selectAll(".cyltext")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+        circle.selectAll(".chord")
+        .filter(function(d) { return !(chord_artists[d.source.index].name.indexOf(str) >= 0 || chord_artists[d.target.index].name.indexOf(str) >= 0) })
+        .style("stroke-opacity", .2)
+        .style("opacity", .2);
+    }
+}
+
+
+function dimNodes(d) {
+    if (d.type == "album" && !showAlbumLabel) {
+        return 0;
+    }
+    if (d.type == "band" && !showBandLabel) {
+        return 0;
+    }
+    return 1;
+}
+
+function doShowNode(id, term, url) {
+    if (url != undefined && url.length > 0) {
+        window.open(url, "_blank");
+    }
+}
+
+// hook method (changed when webMode == "browser")
+function showNode(id) {
+    var len= nodeList.length;
+    var url  = "";
+    var term = "";
+    var doit = false;
+    while (len--) {
+        if (nodeList[len].id == id) {
+            doit= true;
+            if (nodeList[len].webURL != undefined && nodeList[len].webURL.length > 0) {
+                url= nodeList[len].webURL;
+            }
+            if (nodeList[len].type == "artist" || nodeList[len].type == "root" || nodeList[len].type == "band") {
+                term= nodeList[len].name;
+            }
+            if (nodeList[len].type == "album") {
+                term= nodeList[len].name + " - " + nodeList[len].title;
+            }
+            break;
+        }
+    }
+    if (doit) {
+        //doShowNode(id, term, url); (will be replaced to this)
+        doShowNode(id, term, url);
+    }
+}
+
+function showInstr(ins) {
+    var len= nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "instrument" && nodeList[len].abbrev == ins.data.name) {
+            showNode(nodeList[len].id);
+            break;
+        }
+    }
+}
+
+function showGenre(gen) {
+    var len= nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "genre" && nodeList[len].abbrev == gen.data.name) {
+            showNode(nodeList[len].id);
+            break;
+        }
+    }
+}
+
+function showCountry(c) {
+    var len= nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "country" && nodeList[len].abbrev == c.data.name) {
+            showNode(nodeList[len].id);
+            break;
+        }
+    }
+}
+
+// ------- Timeline Data ------------------------------------------------------------------
+
+// array of {year, amount, items (=list of album IDs)}
+var timelineData = [];
+
+function getYear(y) {
+    var len = timelineData.length;
+    while (len--) {
+        if (timelineData[len].year == y) {
+            return timelineData[len];
+        }
+    }
+    var year= {};
+    year["year"]= y;
+    year["amount"]= 0;
+    year["items"]= [];
+    timelineData.splice(timelineData.length,0,year);
+    return year;
+}
+
+function createTimelineData() {
+    var year;
+    var yearItem;
+    var len = nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "album") {
+            year= nodeList[len].year;
+            yearItem= getYear(year);
+            if (yearItem.items.indexOf(nodeList[len]) < 0) {
+                yearItem.items.push(nodeList[len]);
+                yearItem.amount= yearItem.amount + 1;
+            }
+        }
+    }
+}
+
+function calcTimeRange () {
+    var year;
+    var len = nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "album") {
+            year= nodeList[len].year;
+            if (year) {
+                if (year > maxYear) maxYear= year;
+                if (year < minYear) minYear= year;
+            }
+        }
+    }
+    lowerYear= minYear-1;
+    upperYear= maxYear+1;
+}
+
+calcTimeRange();
+createTimelineData(); // calculate timelineData dataset
+timelineData.sort(function(a, b) { return a.year - b.year; });
+
+var timelineValues = [];
+
+function generateValues() {
+    if (timelineData.length == 0) return;
+    var y1= 0, y2= 0;
+    var startIdx= 0;
+    // we add a pre-year for unknown album years (year == 0)
+    if (timelineData[0].year == 0) {
+        timelineValues.push(timelineData[0].amount);
+        startIdx= 1;
+        if (timelineData.length > 1)
+        y1= timelineData[1].year;
+    } else {
+        timelineValues.push(0);
+        y1= timelineData[0].year;
+    }
+    for (var i= startIdx; i < timelineData.length; i++) {
+        y2= timelineData[i].year;
+        for (var j= 0; y2 > y1; j++) {
+            timelineValues.push(0);
+            y1 = y1 + 1;
+        }
+        timelineValues.push(timelineData[i].amount);
+        y1= timelineData[i].year + 1;
+    }
+}
+
+generateValues();
+
+// ------- Timeline Bar & Controller  ------------------------------------------------------------------
+
+function albumBarColor(d, i) {
+    if (minYear + i -1 < lowerYear || minYear + i > upperYear) {
+        return disAlbumColor;
+    }
+    return albumColor;
+}
+
+var numbins = timelineValues.length;
+
+var timeline_width = chartwidth - leftfix -rightfix,
+timeline_height = 60;
+
+var tlPosX = leftmargin + leftfix,
+tlPosY = 6;
+
+var tl_x = d3.scale.linear()
+.domain([minYear-1, maxYear+1])
+.range([0, timeline_width]);
+
+var tl_y = d3.scale.linear()
+.domain([0, d3.max(timelineValues)])
+.range([timeline_height, 0]);
+
+var xAxis = d3.svg.axis()
+.scale(tl_x)
+.tickFormat(d3.format("d"))
+.orient("bottom");
+
+var yAxis = d3.svg.axis()
+.scale(tl_y)
+.ticks(d3.max(timelineValues))
+.orient("left")
+.tickFormat(d3.format("d"));
+
+var bar = svg.selectAll(".bar")
+.data(timelineValues)
+.enter().append("g")
+.attr("class", "bar")
+.attr("transform", function(d, i) { return "translate(" + i * timeline_width/numbins + ", 0)"; });
+
+bar.append("rect")
+.attr('x', function(d) { return tlPosX; })
+.attr('y', function(d) { return tlPosY + tl_y(d); })
+.attr('width', function(d) { return timeline_width/numbins - 1; })
+.attr('height', function(d) { return timeline_height - tl_y(d); })
+.style("fill", albumBarColor)
+.on("click", timeClick)
+.on('mouseover', tip.show)
+.on('mouseout', tip.hide)
+.on('touchstart', tip.show)
+.on('touchend', tip.hide);
+
+bar.append("text")
+.attr("dy", ".75em")
+.attr("y", timeline_height - 4)
+.attr("x", tlPosX + timeline_width/numbins / 2)
+.attr("text-anchor", "middle")
+.attr('pointer-events', 'none')
+.style("fill","white")
+.text(function(d) { return d; });
+
+var tl_view= svg.append("g")
+.attr("transform", "translate(" + tlPosX + "," + tlPosY + ")");
+
+tl_view.append("g")
+.attr("class", "x axis")
+.attr("transform", "translate(0," + timeline_height + ")")
+.call(xAxis);
+
+tl_view.append("g")
+.attr("class", "y axis")
+.call(yAxis)
+.append("text")
+.attr("transform", "rotate(-90)")
+.attr("y", -26)
+.attr("dy", ".71em")
+.style("text-anchor", "end")
+.text("# albums");
+/*
+ tl_view.append("line")
+ .attr("x1", 6)
+ .attr("y1", timeline_height + 2)
+ .attr("x2", 6)
+ .attr("y2", timeline_height + 20)
+ .style("stroke-width", 1)
+ .style("stroke-dasharray", ("3, 3"))
+ .style("stroke", "black");
+ 
+ tl_view.append("text")
+ .attr("x", 6)
+ .attr("y", timeline_height + 28)
+ .style("text-anchor", "middle")
+ .text("'?'");
+ */
+var tl_ctrl= tl_view.append("g")
+.attr("class", "timecontrol");
+
+var brush = d3.svg.brush()
+.x(tl_x)
+.extent([.3, .5])
+.on("brushstart", brushstart)
+.on("brush", brushmove)
+.on("brushend", brushend);
+
+var gBrush = tl_view.append("g")
+.attr("class", "brush")
+.call(brush);
+
+gBrush.selectAll("rect")
+.attr("y", timeline_height)
+.attr("height", 24)
+.style("fill", brushColor)
+.style("fill-opacity", 0.55);
+
+var triangle_width = 8;
+
+var trianglePoints = [{x:1, y:timeline_height},
+{x:8, y:timeline_height + 12},
+{x:1, y:timeline_height + 24}];
+
+var lineTo = d3.svg.line()
+.x(function(d){return d.x;})
+.y(function(d){return d.y;})
+.interpolate("linear");
+
+tl_ctrl.append("line")
+.attr("x1", function(d) { return timeline_width; })
+.attr("y1", 0)
+.attr("x2", function(d) { return timeline_width; })
+.attr("y2", function(d) { return timeline_height; })
+.style("stroke-width", 1)
+.style("stroke", "black");
+
+tl_ctrl.append("svg:path")
+.attr("d", lineTo(trianglePoints))
+.style("stroke-width", 1)
+.style("stroke", "red")
+.style("fill", "orange");
+
+tl_ctrl.append("svg:path")
+.attr("d", lineTo(trianglePoints))
+.attr("transform", "translate(" + timeline_width + ",0) scale(-1, 1)")
+.style("stroke-width", 1)
+.style("stroke", "red")
+.style("fill", "orange");
+
+gBrush.selectAll(".resize").append("path")
+.attr("d", lineTo(trianglePoints))
+.attr("transform", function(d, i) { if (i == 0) return "scale(-1,1)"; return "scale (1,1)"; })
+.style("stroke-width", 1)
+.style("stroke", "red")
+.style("fill", "orange");
+
+function brushstart() {
+    //svg.classed("selecting", true);
+    tl_view.select("g.timecontrol").attr("opacity", 0);
+}
+
+function brushmove() {
+}
+
+function brushend() {
+    if (!d3.event.sourceEvent) return; // only transition after input
+    var extent0 = brush.extent();
+    var extent1 = brush.extent();
+    extent1[0]= Math.round(extent0[0]);
+    extent1[1]= Math.round(extent0[1]);
+    if (Math.abs(extent1[1] -  extent1[0]) < 0.1) {
+        extent1[0]= Math.floor(extent0[0]);
+        if (timelineValues[extent1[0] - minYear + 1] > 0) {
+            extent1[1]= Math.ceil(extent0[1]);
+        } else {
+            extent1[1]= extent1[0];
+        }
+    }
+    d3.select(this).transition()
+    .call(brush.extent(extent1));
+    //        .call(brush.event);
+    
+    if (Math.abs(extent1[1] -  extent1[0]) < 0.1) {
+        tl_view.select("g.timecontrol").attr("opacity", 1);
+        lowerYear = minYear - 1;
+        upperYear= maxYear+1;
+        animate= false;
+    } else {
+        tl_view.select("g.timecontrol").attr("opacity", 0);
+        lowerYear = extent1[0];
+        upperYear= extent1[1];
+    }
+    filterData();
+    update();
+}
+
+function timeClick(d, i) {
+    lowerYear = minYear + i -1;
+    upperYear= lowerYear + 1;
+    var extent1 = [0,0];
+    extent1[0]= lowerYear;
+    extent1[1]= upperYear;
+    gBrush.transition()
+    .call(brush.extent(extent1));
+    tl_view.select("g.timecontrol").attr("opacity", 0);
+    filterData();
+    update();
+}
+
+function updateTimeline() {
+    var j= -1;
+    bar.selectAll("rect").style("fill", function() { j=j+1; if (minYear + j -1 < lowerYear || minYear + j > upperYear) return disAlbumColor; return albumColor; });
+}
+
+
+// ------- Pie Selectors ---------------------------------------------------------------------------------
+
+var pieWidth = leftmargin;
+var outerRadius = pieWidth/2;
+var innerRadius = pieWidth/4 + 3;
+
+// ------- Instrument Selector ------------------------
+
+// array of {name, amount, items (=list of IDs)}
+var instrData = [];
+
+function getInstr(cStr) {
+    var len = instrData.length;
+    while (len--) {
+        if (instrData[len].name == cStr) {
+            return instrData[len];
+        }
+    }
+    var instr= {};
+    instr["name"]= cStr;
+    instr["amount"]= 0;
+    instr["items"]= [];
+    instrData.splice(instrData.length,0,instr);
+    return instr;
+}
+
+function createInstrData() {
+    var instrStr;
+    var instr;
+    var len = nodeList.length;
+    while (len--) {
+        if (nodeList[len].type == "artist" || nodeList[len].type == "root") {
+            instrStr= nodeList[len].instr;
+            if (instrStr.indexOf(", ") == -1) {
+                instr= getInstr(instrStr);
+                if (instr.items.indexOf(nodeList[len]) < 0) {
+                    instr.items.push(nodeList[len]);
+                    instr.amount= instr.amount + 1;
+                }
+            } else {
+                var instrList = instrStr.split(", ");
+                var len2 = instrList.length;
+                while (len2--) {
+                    instrStr= instrList[len2];
+                    instr= getInstr(instrStr);
+                    if (instr.items.indexOf(nodeList[len]) < 0) {
+                        instr.items.push(nodeList[len]);
+                        instr.amount= instr.amount + 1;
+                    }
+                }
+            }
+        }
+    }
+    instrData.sort(function(a,b) { return a.amount-b.amount });
+    if (instrData.length > maxTypes) {
+        instrData.slice(0, instrData.length - maxTypes);
+    }
+}
+
+createInstrData();
+
+function updateInstrData() {
+    var instrStr;
+    var instr;
+    var len = instrData.length;
+    while (len--) {
+        instrData[len].items= [];
+        instrData[len].amount= 0;
+    }
+    len = curNodeList.length;
+    while (len--) {
+        if (curNodeList[len].type == "artist" || curNodeList[len].type == "root") {
+            instrStr= curNodeList[len].instr;
+            if (instrStr.indexOf(", ") == -1) {
+                instr= getInstr(instrStr);
+                if (instr.items.indexOf(curNodeList[len]) < 0) {
+                    instr.items.push(curNodeList[len]);
+                    instr.amount= instr.amount + 1;
+                }
+            } else {
+                var instrList = instrStr.split(", ");
+                var len2 = instrList.length;
+                while (len2--) {
+                    instrStr= instrList[len2];
+                    instr= getInstr(instrStr);
+                    if (instr.items.indexOf(curNodeList[len]) < 0) {
+                        instr.items.push(curNodeList[len]);
+                        instr.amount= instr.amount + 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+var instrColor = d3.scale.category20();
+
+var instrPie = d3.layout.pie()
+.value(function(d) { return d.amount; })
+.sort(null); // disable sort-by-value;
+
+var instrCtrl = svg.append("g")
+.attr("class", "instruments")
+.attr("transform", "translate(6," + ctrlTopMargin + ")");
+
+instrCtrl.append("text")
+.attr("transform", "translate(0, " + (-3) + ")")
+.attr("text-anchor", "start")
+.text("Instruments");
+
+var innerInstr= instrCtrl.append("circle")
+.attr("transform", "translate(" + (outerRadius) + ", " + (outerRadius) + ")")
+.attr("r", innerRadius)
+.style("fill", "white");
+
+var onInstr= instrCtrl.append("text")
+.attr("transform", "translate(" + (outerRadius) + ", " + (outerRadius+3) + ")")
+.attr("text-anchor", "middle")
+.style("font-weight","bold")
+.style("fill","white")
+.text("");
+
+var curInstruments;
+
+var updateInstruments = function () {
+    
+    updateInstrData(); // calculate dataset
+    curInstruments= [];
+    var len = instrData.length;
+    while (len--) {
+        if (instrData[len].amount > 0) {
+            curInstruments.push(instrData[len]);
+        }
+    }
+    var instrArc = d3.svg.arc()
+    .innerRadius(innerRadius)
+    .outerRadius(outerRadius);
+    
+    var instrArcs = instrCtrl.selectAll("instrArc")
+    .data(instrPie(curInstruments));
+    
+    var newInstrArcs= instrArcs.enter()
+    .append("g")
+    .attr("class", "instrArc")
+    .attr("transform", "translate(" + outerRadius + ", " + outerRadius + ")")
+    .on('mouseover', distinguishInstrument)
+    .on('mouseout', defade)
+    .on('dblclick', showInstr)
+    .on('touchstart', distinguishInstrument)
+    .on('touchend', defade);
+    
+    newInstrArcs.append("path")
+    .attr("class", "arcFill")
+    .attr("fill", function(d, i) { return instrColor(instrData.indexOf(curInstruments[i])); })
+    .attr("d", instrArc);
+    
+    newInstrArcs.append("text")
+    .attr("transform", function(d) { return "translate(" + instrArc.centroid(d) + ")"; })
+    .attr("text-anchor", "middle")
+    .attr('pointer-events', 'none')
+    .style("fill","white")
+    .text(function(d,i) { if (d.data.name == "") return "'?'"; return d.data.name; });
+    
+    instrArcs.exit().remove();
+    
+}
+
+// ------- Genre Selector ------------------------
+
+// array of {name, amount, items (=list of IDs)}
+var genreData = [];
+
+
+function getGenre(cStr) {
+    var len = genreData.length;
+    while (len--) {
+        if (genreData[len].name == cStr) {
+            return genreData[len];
+        }
+    }
+    var genre= {};
+    genre["name"]= cStr;
+    genre["amount"]= 0;
+    genre["items"]= [];
+    genreData.splice(genreData.length,0,genre);
+    return genre;
+}
+
+function createGenreData() {
+    var genreStr;
+    var genre;
+    var len = nodeList.length;
+    while (len--) {
+        if (curNodeList[len].type == "artist" || curNodeList[len].type == "root" || curNodeList[len].type == "band" || curNodeList[len].type == "album") {
+            genreStr= nodeList[len].mainGenre;
+            genre= getGenre(genreStr);
+            if (genre.items.indexOf(nodeList[len]) < 0) {
+                genre.items.push(nodeList[len]);
+                genre.amount= genre.amount + 1;
+            }
+        }
+    }
+    genreData.sort(function(a,b) { return a.amount-b.amount });
+    if (genreData.length > maxTypes) {
+        genreData.slice(0, genreData.length - maxTypes);
+    }
+}
+
+createGenreData();
+
+function updateGenreData() {
+    var genreStr;
+    var genre;
+    var len = genreData.length;
+    while (len--) {
+        genreData[len].items= [];
+        genreData[len].amount= 0;
+    }
+    len = curNodeList.length;
+    var b;
+    while (len--) {
+        if (charttype == "circle") {
+            b= curNodeList[len].type == "artist" || curNodeList[len].type == "root";
+        } else {
+            b= curNodeList[len].type == "artist" || curNodeList[len].type == "root" || curNodeList[len].type == "band" || curNodeList[len].type == "album";
+        }
+        if (b) {
+            genreStr= curNodeList[len].mainGenre;
+            genre= getGenre(genreStr);
+            if (genre.items.indexOf(curNodeList[len]) < 0) {
+                genre.items.push(curNodeList[len]);
+                genre.amount= genre.amount + 1;
+            }
+        }
+    }
+}
+
+var genreColor = d3.scale.category20b();
+
+var genrePie = d3.layout.pie()
+.value(function(d) { return d.amount; })
+.sort(null); // disable sort-by-value;
+
+var genreCtrl = svg.append("g")
+.attr("class", "genres")
+.attr("transform", "translate(6," + (ctrlTopMargin + leftmargin + 20) + ")");
+
+genreCtrl.append("text")
+.attr("transform", "translate(0, " + 2 + ")")
+.attr("text-anchor", "start")
+.text("Genres");
+
+var innerGenre= genreCtrl.append("circle")
+.attr("transform", "translate(" + (outerRadius) + ", " + (outerRadius) + ")")
+.attr("r", innerRadius)
+.style("fill", "white");
+
+var onGenre= genreCtrl.append("text")
+.attr("transform", "translate(" + (outerRadius) + ", " + (outerRadius+3) + ")")
+.attr("text-anchor", "middle")
+.style("font-weight","bold")
+.style("fill","white")
+.text("");
+
+var curGenres;
+
+var updateGenres = function () {
+    
+    updateGenreData(); // calculate dataset
+    curGenres= [];
+    var len = genreData.length;
+    while (len--) {
+        if (genreData[len].amount > 0) {
+            curGenres.push(genreData[len]);
+        }
+    }
+    
+    var genreArc = d3.svg.arc()
+    .innerRadius(innerRadius)
+    .outerRadius(outerRadius);
+    
+    var genreArcs = genreCtrl.selectAll("genreArc")
+    .data(genrePie(curGenres));
+    
+    var newGenArcs= genreArcs.enter()
+    .append("g")
+    .attr("class", "genreArc")
+    .attr("transform", "translate(" + outerRadius + ", " + outerRadius + ")")
+    .on('mouseover', distinguishGenre)
+    .on('mouseout', defade)
+    .on('touchstart', distinguishGenre)
+    .on('touchend', defade)
+    .on('dblclick', showGenre);
+    
+    newGenArcs.append("path")
+    .attr("class", "arcFill")
+    .attr("fill", function(d, i) { return genreColor(genreData.indexOf(curGenres[i])); })
+    .attr("d", genreArc);
+    
+    newGenArcs.append("text")
+    .attr("transform", function(d) { return "translate(" + genreArc.centroid(d) + ")"; })
+    .attr("text-anchor", "middle")
+    .attr('pointer-events', 'none')
+    .style("fill","white")
+    .text(function(d,i) { if (d.data.name == "unknown") return "'?'"; return d.data.name; });
+    
+    genreArcs.exit().remove();
+}
+
+// ------- Country Selector ------------------------
+
+// array of {name, amount, items (=list of IDs)}
+var countryData = [];
+
+function getCountry(cStr) {
+    var len = countryData.length;
+    while (len--) {
+        if (countryData[len].name == cStr) {
+            return countryData[len];
+        }
+    }
+    var country= {};
+    country["name"]= cStr;
+    country["amount"]= 0;
+    country["items"]= [];
+    countryData.splice(countryData.length,0,country);
+    return country;
+}
+
+function createCountryData() {
+    var countryStr;
+    var country;
+    var len = nodeList.length;
+    while (len--) {
+        if (curNodeList[len].type == "artist" || curNodeList[len].type == "root" || curNodeList[len].type == "band" || curNodeList[len].type == "album") {
+            countryStr= nodeList[len].country;
+            country= getCountry(countryStr);
+            if (country.items.indexOf(nodeList[len]) < 0) {
+                country.items.push(nodeList[len]);
+                country.amount= country.amount + 1;
+            }
+        }
+    }
+    countryData.sort(function(a,b) { return a.amount-b.amount });
+    if (countryData.length > maxTypes) {
+        countryData.slice(0, countryData.length - maxTypes);
+    }
+}
+
+createCountryData();
+
+function updateCountryData() {
+    var countryStr;
+    var country;
+    var len = countryData.length;
+    while (len--) {
+        countryData[len].items= [];
+        countryData[len].amount= 0;
+    }
+    len = curNodeList.length;
+    while (len--) {
+        if (charttype == "circle") {
+            b= curNodeList[len].type == "artist" || curNodeList[len].type == "root";
+        } else {
+            b= curNodeList[len].type == "artist" || curNodeList[len].type == "root" || curNodeList[len].type == "band" || curNodeList[len].type == "album";
+        }
+        if (b) {
+            countryStr= curNodeList[len].country;
+            country= getCountry(countryStr);
+            if (country.items.indexOf(curNodeList[len]) < 0) {
+                country.items.push(curNodeList[len]);
+                country.amount= country.amount + 1;
+            }
+        }
+    }
+}
+
+var countryColor = d3.scale.category20c();
+
+var countryPie = d3.layout.pie()
+.value(function(d) { return d.amount; })
+.sort(null); // disable sort-by-value;
+
+var countryCtrl = svg.append("g")
+.attr("class", "countries")
+.attr("transform", "translate(6," + (ctrlTopMargin + 2*leftmargin + 40) + ")");
+
+countryCtrl.append("text")
+.attr("transform", "translate(0, " + (-1) + ")")
+.attr("text-anchor", "start")
+.text("Countries");
+
+var innerCountry= countryCtrl.append("circle")
+.attr("transform", "translate(" + (outerRadius) + ", " + (outerRadius) + ")")
+.attr("r", innerRadius)
+.style("fill", "white");
+
+var onCountry= countryCtrl.append("text")
+.attr("transform", "translate(" + (outerRadius) + ", " + (outerRadius+3) + ")")
+.attr("text-anchor", "middle")
+.style("font-weight","bold")
+.style("fill","white")
+.text("");
+
+var curCountries;
+
+var updateCountries = function () {
+    
+    updateCountryData(); // calculate dataset
+    curCountries= [];
+    var len = countryData.length;
+    while (len--) {
+        if (countryData[len].amount > 0) {
+            curCountries.push(countryData[len]);
+        }
+    }
+    
+    var countryArc = d3.svg.arc()
+    .innerRadius(innerRadius)
+    .outerRadius(outerRadius);
+    
+    var countryArcs = countryCtrl.selectAll("countryArc")
+    .data(countryPie(curCountries));
+    
+    var newArcs= countryArcs.enter()
+    .append("g")
+    .attr("class", "countryArc")
+    .attr("transform", "translate(" + outerRadius + ", " + outerRadius + ")")
+    .on('mouseover', distinguishCountry)
+    .on('mouseout', defade)
+    .on('touchstart', distinguishCountry)
+    .on('touchend', defade)
+    .on('dblclick', showCountry);
+    
+    newArcs.append("path")
+    .attr("class", "arcFill")
+    .attr("fill", function(d, i) { return countryColor(countryData.indexOf(curCountries[i])); })
+    .attr("d", countryArc);
+    
+    newArcs.append("text")
+    .attr("transform", function(d) { return "translate(" + countryArc.centroid(d) + ")"; })
+    .attr("text-anchor", "middle")
+    .attr('pointer-events', 'none')
+    .style("fill","white")
+    .text(function(d,i) { if (d.data.name == "unknown") return "'?'"; return d.data.name; });
+    
+    countryArcs.exit().remove();
+}
+
+// ---- add panel and settings -------------------------------------------------------------------------------
+
+svg.append("foreignObject")
+.attr("class", "panel")
+.attr("width", 200)
+.attr("height", ctrlTopMargin)
+.append("xhtml:body")
+.style("font-size", "12px")
+.html(createPanelContent)
+.on('mouseover', distinguishRoot)
+.on('mouseout', defade)
+.on('touchstart', distinguishRoot)
+.on('touchend', defade);
+
+var title = svg.insert("text", ":first-child")
+.attr("class", "title")
+.attr("id", "title")
+.attr("x", 6)
+.attr("y", 170)
+.attr("text-anchor", "start")
+.style("fill", "#E2E2E2")
+.style("font-size", "37px")
+.style("font-weight", "bold")
+.text("ArtistNet")
+.on("mouseover", tip.show)
+.on("mouseout", tip.hide)
+.on('touchstart', tip.show)
+.on('touchend', tip.hide);
+
+svg.insert("text", ":first-child")
+.attr("x", 6)
+.attr("y", 185)
+.attr("text-anchor", "start")
+.style("fill", "#DFDFDF")
+.style("font-size", "12px")
+.style("font-weight", "bold")
+.text("Relations among Musicians")
+
+svg.append("text")
+.attr("x", 250)
+.attr("y", 15)
+.attr("text-anchor", "start")
+.style("fill", "#E2E2E2")
+.style("font-size", "20px")
+.style("font-weight", "bold")
+.text("Album Timeline")
+.on("mouseover", tip.show)
+.on("mouseout", tip.hide)
+.on('touchstart', tip.show)
+.on('touchend', tip.hide);
+
+var title = svg.insert("text", ":first-child")
+.attr("class", "chartTitle")
+.attr("id", "chartTitle")
+.attr("transform", "translate(940, 626) rotate(-90)")
+.attr("text-anchor", "start")
+.style("fill", "#DFDFDF")
+.style("font-size", "50px")
+.style("font-weight", "bold")
+.text("Circle View")
+.on("mouseover", tip.show)
+.on("mouseout", tip.hide)
+.on('touchstart', tip.show)
+.on('touchend', tip.hide);
+
+svg.append("image")
+.attr("transform", "translate(911, 639)")
+.attr("xlink:href", "http://www.metason.net/images/ArtistNet/icons/help.png")
+.attr("width", 24)
+.attr("height", 24)
+.on("mouseover", tip.show)
+.on("mouseout", tip.hide)
+.on('touchstart', tip.show)
+.on('touchend', tip.hide);
+
+var graphSettings = svg.append("foreignObject")
+.attr("class", "graphSettings")
+.attr("id", "graphSettings")
+.attr("x", width-110)
+.attr("y", 6)
+.attr("width", 140)
+.attr("height", 140)
+.append("xhtml:body")
+.html(createGraphSettingsContent);
+
+
+var circleSettings,
+clusterSettings,
+line1, line2, line3, arrow; // lines to show selected cluster
+
+// ---- initialize -------------------------------------------------------------------------------
+
+// finally run graph chart, go first with all nodes and links so that they get initialized
+force.nodes(curNodeList)
+.links(curLinkList)
+.start();
+filterData();
+update();
+
+if (nodeList[0].desc != undefined && nodeList[0].desc.length > 3 && nodeList[0].desc.substring(0,4) == "Band") {
+    // start with graph view
+    setChartType(2);
+} else {
+    // start with circle view
+    setChartType(1);
+}
+doPlay();
+
+// -------- End of ArtistNet Graph View Code --------------------------------------------------------------------
+    </script>
+<div class="footer" style="height:14px; background:rgb(100,0,25); font-family:sans-serif;padding:6pt">
+    <span style="color:rgb(200,200,200); font-size:8pt;">Interactive ArtistNet visualization created by
+        <a style="color:rgb(250,150,0); text-decoration: none;" href="http://www.metason.net/index.php/artistinfo">
+        ArtistInfo for Mac</a>
+        application.
+    </span>
+    <span style="color:rgb(200,200,200); font-size:8pt;float:right">
+        &copy; 2014 by Metason
+    </span>
+</div>
+</body>
+</html>

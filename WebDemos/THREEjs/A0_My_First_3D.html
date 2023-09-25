@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello 3D World</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="webgl-container"></div>
+
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(0xEEEEEE, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        // position and point the camera to the center of the scene
+        camera.position.x = -8;
+        camera.position.y = 10;
+        camera.position.z = 20;
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+    </script>
+</body>
+
+</html>

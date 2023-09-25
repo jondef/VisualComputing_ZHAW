@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Glow example</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+	<!-- Shaders -->
+	<script type="x-shader/x-vertex" id="texturedVS">
+
+		varying vec2 vUv;
+
+		void main(void)
+		{
+			vUv = uv;
+
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="texturedFS">
+
+		varying vec2 vUv;
+
+		uniform sampler2D map;
+
+		void main(void)
+		{
+			gl_FragColor = texture2D( map, vUv );
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="albedoEmissiveFS">
+
+		varying vec2 vUv;
+
+		uniform sampler2D albedoMap;
+		uniform sampler2D glowMap;
+
+		void main(void)
+		{
+			vec3 albedo = texture2D( albedoMap, vUv ).rgb;
+			vec3 glow   = texture2D( glowMap, vUv ).rgb;
+
+			gl_FragColor = vec4(albedo + glow, 1.0);
+		}
+
+	</script>
+
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+
+	<!-- Shaders from ThreeJS -->
+	<script src="assets/glow/js/postprocessing/EffectComposer.js"></script>
+	<script src="assets/glow/js/postprocessing/MaskPass.js"></script>
+	<script src="assets/glow/js/postprocessing/RenderPass.js"></script>
+	<script src="assets/glow/js/postprocessing/ShaderPass.js"></script>
+	<script src="assets/glow/js/shaders/CopyShader.js"></script>
+	<script src="assets/glow/js/shaders/HorizontalBlurShader.js"></script>
+	<script src="assets/glow/js/shaders/VerticalBlurShader.js"></script>
+
+	<!-- Custom shaders -->
+	<script src="assets/glow/js/GaussianBlurShader.js"></script>
+	<script src="assets/glow/js/LinearBlurShader.js"></script>
+	<script src="assets/glow/js/CompositingShader.js"></script>
+
+    <script type="text/javascript">
+        var glowScene = new THREE.Scene();
+		var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+		// Create a rendertarget for the glow values
+		var renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBufer: false };
+		renderTargetGlow = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, renderTargetParameters );
+
+		var glowcomposer, finalcomposer;
+		var compositingPass;
+
+		// Select rendering mode
+		var renderModelOnly = false;
+
+        renderer.setClearColor(0x777777, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        var grid = new THREE.GridHelper(80, 80);
+
+         // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -0.05;
+        plane.position.z = 0;
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+		// Load textures
+		var albedoMap = new THREE.TextureLoader().load('assets/tron/trondisk_diffuse.jpg');
+		var glowMap = new THREE.TextureLoader().load('assets/tron/trondisk_glow.png');
+
+		var mesh;
+		var albedoMat, glowMat, albedoGlowMat;
+
+        var loader = new THREE.JSONLoader();
+        loader.load('assets/tron/trondisk.js', function (geometry) {
+
+    			albedoMat = new THREE.ShaderMaterial({
+    				uniforms: {
+    					map: {type: 't', value: albedoMap}
+    				},
+
+    				vertexShader:   document.getElementById('texturedVS').textContent,
+    				fragmentShader: document.getElementById('texturedFS').textContent
+    			});
+
+    			glowMat = new THREE.ShaderMaterial({
+    				uniforms: {
+    					map: {type: 't', value: glowMap}
+    				},
+
+    				vertexShader:   document.getElementById('texturedVS').textContent,
+    				fragmentShader: document.getElementById('texturedFS').textContent
+    			});
+
+    			albedoGlowMat = new THREE.ShaderMaterial({
+    				uniforms: {
+    					albedoMap: {type: 't', value: albedoMap},
+    					glowMap: {type: 't', value: glowMap}
+    				},
+
+    				vertexShader:   document.getElementById('texturedVS').textContent,
+    				fragmentShader: document.getElementById('albedoEmissiveFS').textContent
+    			});
+
+          mesh = new THREE.Mesh(geometry, albedoMat);
+          mesh.scale.set(0.5, 0.5, 0.5);
+          scene.add(mesh);
+
+          var glowMesh = new THREE.Mesh(geometry, glowMat);
+          glowMesh.scale.set(0.5, 0.5, 0.5);
+          glowScene.add(glowMesh);
+
+          render();
+    });
+
+		function composeSeparableGaussianFilter() {
+
+			var renderModelGlow = new THREE.RenderPass( glowScene, camera );
+			var hblur = new THREE.ShaderPass( THREE.HorizontalBlurShader );
+			var vblur = new THREE.ShaderPass( THREE.VerticalBlurShader );
+
+			renderModelGlow.clearColor = 0x000000;
+
+			hblur.needsSwap = true;
+			vblur.needsSwap = true;
+
+			var bluriness = 3;
+
+			hblur.uniforms[ 'h' ].value = bluriness / window.innerWidth;
+			vblur.uniforms[ 'v' ].value = bluriness / window.innerHeight;
+
+			glowcomposer = new THREE.EffectComposer( renderer, renderTargetGlow );
+			glowcomposer.addPass( renderModelGlow );
+			glowcomposer.addPass( hblur );
+			glowcomposer.addPass( vblur );
+			glowcomposer.addPass( hblur );
+			glowcomposer.addPass( vblur );
+
+			// Reset the input to the compositing
+			compositingPass.material.uniforms[ 'tGlow' ].value = glowcomposer.renderTarget2;
+		}
+
+		function composeGaussianFilter() {
+
+			var renderModelGlow = new THREE.RenderPass( glowScene, camera );
+			var blur = new THREE.ShaderPass( GaussianBlurShader );
+
+			renderModelGlow.clearColor = 0x000000;
+
+			blur.needsSwap = true;
+
+			var bluriness = 3;
+
+			blur.uniforms[ 'h' ].value = bluriness / window.innerWidth;
+			blur.uniforms[ 'v' ].value = bluriness / window.innerHeight;
+
+			glowcomposer = new THREE.EffectComposer( renderer, renderTargetGlow );
+			glowcomposer.addPass( renderModelGlow );
+			glowcomposer.addPass( blur );
+			glowcomposer.addPass( blur );
+			glowcomposer.addPass( blur );
+			glowcomposer.addPass( blur );
+
+			// Reset the input to the compositing
+			compositingPass.material.uniforms[ 'tGlow' ].value = glowcomposer.renderTarget2;
+		}
+
+		function composeLinearFilter() {
+
+			var renderModelGlow = new THREE.RenderPass( glowScene, camera );
+			var blur = new THREE.ShaderPass( LinearBlurShader );
+
+			renderModelGlow.clearColor = 0x000000;
+
+			blur.needsSwap = true;
+
+			var bluriness = 3;
+
+			blur.uniforms[ 'h' ].value = bluriness / window.innerWidth;
+			blur.uniforms[ 'v' ].value = bluriness / window.innerHeight;
+
+			glowcomposer = new THREE.EffectComposer( renderer, renderTargetGlow );
+			glowcomposer.addPass( renderModelGlow );
+			glowcomposer.addPass( blur );
+			glowcomposer.addPass( blur );
+			glowcomposer.addPass( blur );
+			glowcomposer.addPass( blur );
+
+			// Reset the input to the compositing
+			compositingPass.material.uniforms[ 'tGlow' ].value = glowcomposer.renderTarget2;
+		}
+
+		// FINAL COMPOSER
+		finalcomposer = new THREE.EffectComposer( renderer );
+
+		// Render the model to the scene
+		var renderModel = new THREE.RenderPass( scene, camera );
+		finalcomposer.addPass( renderModel );
+
+		// Render the blurred scene to the screen
+		compositingPass = new THREE.ShaderPass( CompositingShader );
+		compositingPass.renderToScreen = true;
+		finalcomposer.addPass( compositingPass );
+
+		// Initialize one of the filters
+		//composeSeparableGaussianFilter();
+		//composeGaussianFilter();
+		composeLinearFilter();
+
+         // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+         // position and point the camera to the center of the scene
+        camera.position.x = -20;
+        camera.position.y = 28;
+        camera.position.z = 40;
+        camera.lookAt(scene.position);
+
+         // add subtle ambient lighting
+        var ambientLight = new THREE.AmbientLight(0x222222);
+        scene.add(ambientLight);
+
+         // add spotlight
+        var spotLight = new THREE.SpotLight(0xaaaaaa);
+        spotLight.position.set(-80, 70, 90);
+        scene.add(spotLight);
+
+         // add headlight
+        var headLight = new THREE.PointLight(0xbbbbbb, 1.0);
+        headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+        scene.add(headLight);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = true;
+            this.showGrid = false;
+            this.showPlane = false;
+            this.asWireframes = false;
+      			this.renderModelOnly = false;
+      			this.useDiffusePlusEmissive = false;
+      			this.renderMode = 'glow'
+      			this.blurMode = 'linear'
+        }
+
+        var gui = new dat.GUI({
+            autoPlace: false
+        });
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showGrid').onChange(function (e) {
+            showGrid = e;
+            if (showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showPlane').onChange(function (e) {
+            showPlane = e;
+            if (showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+        gui.add(guiControls, 'renderMode', ['diffuse', 'emissive', 'diffuse + emissive', 'glow']).onChange(function (e) {
+
+			if ( e == 'diffuse' ) {
+				mesh.material = albedoMat;
+				renderModelOnly = true;
+			} else if ( e == 'emissive' ) {
+				mesh.material = glowMat;
+				renderModelOnly = true;
+			} else if ( e == 'diffuse + emissive' ) {
+				mesh.material = albedoGlowMat;
+				renderModelOnly = true;
+			} else if ( e == 'glow' ) {
+				mesh.material = albedoMat;
+				renderModelOnly = false;
+			}
+
+            render();
+        });
+        gui.add(guiControls, 'blurMode', ['linear', 'gaussian', 'seperable gaussian']).onChange(function (e) {
+
+			if ( e == 'linear' ) {
+				composeLinearFilter();
+			} else if ( e == 'gaussian' ) {
+				composeGaussianFilter();
+			} else if ( e == 'seperable gaussian' ) {
+				composeSeparableGaussianFilter();
+			}
+
+            render();
+        });
+        //gui.close();
+
+         // init and call render function
+        function render() {
+            headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+
+			if ( renderModelOnly ) {
+				renderer.render( scene, camera )
+			} else {
+				glowcomposer.render( 0.1 );
+				finalcomposer.render( 0.1 );
+			}
+        }
+        render();
+
+    </script>
+</body>
+
+</html>

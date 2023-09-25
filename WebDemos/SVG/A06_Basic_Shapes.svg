@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+    <rect x="25" y="25" width="100" height="75" fill="green" stroke="black" stroke-width="5"/>
+    <rect x="150" y="25" rx="20" ry="20" width="100" height="75" fill="green" stroke="black" stroke-width="5"/>
+	<circle cx="350" cy="75" r="50" fill="orange" stroke="black" stroke-width="5"/>
+	<ellipse cx="525" cy="75" rx="100" ry="50" fill="yellow" stroke="black" stroke-width="5"/>
+
+    <line x1="25" y1="190" x2="150" y2="150" stroke="black" stroke-width="1"/>
+    <line x1="25" y1="200" x2="150" y2="180" stroke="black" stroke-width="4"/>
+    <line x1="25" y1="220" x2="150" y2="220" stroke="black" stroke-width="8"/>
+    <line x1="25" y1="240" x2="150" y2="290" stroke="black" stroke-width="16"/>
+    <polyline points="230,260 250,200 280,300 320,160 420,160 420,200" fill="none" stroke="black" stroke-width="5"/>
+    <polygon points="450,260 540,180 660,300" fill="lime" stroke="black" stroke-width="5"/>
+
+    <path d="M25 470 L150 410 L180 350 L200 420 Z" fill="red" stroke="black" stroke-width="5"/>
+    <path d="M 240 400 q 100 -130 200 40" stroke="blue" stroke-width="5" fill="none" />
+    <text x="480" y="420" font-size="72">Text</text>
+</svg>

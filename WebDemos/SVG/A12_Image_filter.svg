@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <image x="0%" y="00%" width="50%" height="50%" xlink:href="assets/zhaw_tech.jpg" />
+    <filter id="blur">
+        <feGaussianBlur stdDeviation="2" />
+    </filter>
+    <image x="50%" y="00%" width="50%" height="50%" filter="url(#blur)" xlink:href="assets/zhaw_tech.jpg" />
+</svg>

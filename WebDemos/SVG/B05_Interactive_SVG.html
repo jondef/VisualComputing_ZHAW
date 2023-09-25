@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+        output {
+            background-color: Black;
+            color: White;
+            border-style: double;
+            padding: 0.4em;
+        }
+    </style>
+</head>
+
+<body>
+    <H1>Use of JavaScript in HTML for interactive SVG</H1>
+    here we go ...
+    <br>
+    <br>
+    <svg height="340" width="600">
+        <circle id="circle1" cx="150" cy="150" r="125" fill="yellow" stroke="orange" stroke-width="30" />
+        <filter id="blur">
+            <feGaussianBlur id="gauss" stdDeviation="12" />
+        </filter>
+        <circle id="circle2" cx="450" cy="150" r="125" filter="url(#blur)" fill="yellow" stroke="orange" stroke-width="30" />
+
+    </svg>
+    <br>
+    <label>Inner color:</label>
+    <select name="mydropdown" onchange="updateColor(value)">
+        <option value="yellow">yellow</option>
+        <option value="blue">blue</option>
+        <option value="red">red</option>
+    </select>
+    <br>
+    <br>
+    <label>Blur intensity:</label>
+    <input type=range min=0 max=20 value=12 id=fader step=1 onchange="updateBlur(value)">
+    <output id="intensity">12</output>
+    <br>
+    <br>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+
+    <script>
+        function updateColor(val) {
+          document.getElementById("circle1").setAttribute("fill", val);
+          document.getElementById("circle2").setAttribute("fill", val);
+        }
+
+        function updateBlur(val) {
+            document.querySelector('#intensity').value = val;
+            document.getElementById("gauss").setAttribute("stdDeviation", val);
+        }
+    </script>
+</body>
+
+</html>

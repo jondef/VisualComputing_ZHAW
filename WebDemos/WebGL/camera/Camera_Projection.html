@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- Credits: CS123 Computer Graphics lecture from Brown University -->
+<!-- Source: http://cs.brown.edu/courses/cs123/demos/camera/ -->
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Camera Transformation WebGL Demo</title>
+    <link type="text/css" href="jquery/css/ui-lightness/jquery-ui-1.8.13.custom.css" rel="stylesheet" />
+    <link type="text/css" href="style.css" rel="stylesheet" />
+    <script type="text/javascript" src="jquery/js/jquery-1.5.1.min.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-ui-1.8.13.custom.min.js"></script>
+    <script type="text/javascript" src="js/J3DIMath.min.js"></script>
+    <script type="text/javascript" src="js/webgl.min.js"></script>
+    <script type="text/javascript" src="js/script.js"></script>
+    <script type="text/javascript">
+        $(main());
+    </script>
+</head>
+
+<body>
+    <div id="frustum-view"></div>
+    <div id="camera-view" class="ui-widget-content ui-draggable"></div>
+    <div id="camtrans-slider-panel" class="ui-widget-content ui-draggable">
+        <p id="trans-step">World-Space
+        </p>
+        <div class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+            <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 0%;"></div>
+            <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 0%;"></a>
+        </div>
+    </div>
+    <div id="control-panel" class="ui-draggable ui-accordion ui-widget ui-helper-reset ui-accordion-icons" role="tablist">
+        <div class="">
+            <h3 class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all ui-state-hover" role="tab" aria-expanded="false" aria-selected="false" tabindex="-1"><a href="#">Field of View</a></h3>
+            <div class="content ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" role="tabpanel" style="display: none;">
+                <div class="region">
+                    <label for="width-amount" id="width-amount-label">Width Angle:</label>
+                    <input type="text" id="width-amount" class="amount" readonly="readonly" />
+                    <div id="width-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 36.97478991596639%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 36.97478991596639%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="height-amount" id="height-amount-label">Height Angle:</label>
+                    <input type="text" id="height-amount" class="amount" readonly="readonly" />
+                    <div id="height-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 36.97478991596639%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 36.97478991596639%;"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h3 class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all" role="tab" aria-expanded="false" aria-selected="false" tabindex="-1"><a href="#">Clipping</a></h3>
+            <div class="content ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" role="tabpanel" style="display: none;">
+                <div class="region">
+                    <label for="near-amount" id="near-amount-label">Near:</label>
+                    <input type="text" id="near-amount" class="amount" readonly="readonly" />
+                    <div id="near-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 9.090909090909092%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 9.090909090909092%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="far-amount" id="far-amount-label">Far:</label>
+                    <input type="text" id="far-amount" class="amount" readonly="readonly" />
+                    <div id="far-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 29.648241206030157%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 29.648241206030157%;"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h3 class="ui-accordion-header ui-helper-reset ui-state-focus ui-state-active ui-corner-top" role="tab" aria-expanded="true" aria-selected="true" tabindex="0"><a href="#">Eye</a></h3>
+            <div class="content ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom ui-accordion-content-active" role="tabpanel" style="overflow: hidden; display: block; padding-top: 10px; padding-bottom: 10px; height: auto;">
+                <div class="region">
+                    <label for="eye-x-amount" id="eye-x-amount-label">X:</label>
+                    <input type="text" id="eye-x-amount" class="amount" readonly="readonly" />
+                    <div id="eye-x-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 41.875%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 41.875%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="eye-y-amount" id="eye-y-amount-label">Y:</label>
+                    <input type="text" id="eye-y-amount" class="amount" readonly="readonly" />
+                    <div id="eye-y-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 56.875%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all ui-state-focus" href="#" style="left: 56.875%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="eye-z-amount" id="eye-z-amount-label">Z:</label>
+                    <input type="text" id="eye-z-amount" class="amount" readonly="readonly" />
+                    <div id="eye-z-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 55.00000000000001%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 55.00000000000001%;"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h3 class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all" role="tab" aria-expanded="false" aria-selected="false" tabindex="-1"><a href="#">LookAt</a></h3>
+            <div class="content ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" role="tabpanel" style="display: none;">
+                <div class="region">
+                    <label for="look-x-amount" id="look-x-amount-label">X:</label>
+                    <input type="text" id="look-x-amount" class="amount" readonly="readonly" />
+                    <div id="look-x-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 65%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 65%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="look-y-amount" id="look-y-amount-label">Y:</label>
+                    <input type="text" id="look-y-amount" class="amount" readonly="readonly" />
+                    <div id="look-y-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 45%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 45%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="look-z-amount" id="look-z-amount-label">Z:</label>
+                    <input type="text" id="look-z-amount" class="amount" readonly="readonly" />
+                    <div id="look-z-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 0%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 0%;"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h3 class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all" role="tab" aria-expanded="false" aria-selected="false" tabindex="-1"><a href="#">Up</a></h3>
+            <div class="content ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" role="tabpanel" style="display: none;">
+                <div class="region">
+                    <label for="up-x-amount" id="up-x-amount-label">X:</label>
+                    <input type="text" id="up-x-amount" class="amount" readonly="readonly" />
+                    <div id="up-x-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 50%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 50%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="up-y-amount" id="up-y-amount-label">Y:</label>
+                    <input type="text" id="up-y-amount" class="amount" readonly="readonly" />
+                    <div id="up-y-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 100%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 100%;"></a>
+                    </div>
+                </div>
+                <div class="region">
+                    <label for="up-z-amount" id="up-z-amount-label">Z:</label>
+                    <input type="text" id="up-z-amount" class="amount" readonly="readonly" />
+                    <div id="up-z-slider" class="slider ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+                        <div class="ui-slider-range ui-widget-header ui-slider-range-min" style="width: 50%;"></div>
+                        <a class="ui-slider-handle ui-state-default ui-corner-all" href="#" style="left: 50%;"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <h3 class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all" role="tab" aria-expanded="false" aria-selected="false" tabindex="-1"><a href="#">Camera Mode</a></h3>
+            <div class="content ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" id="camera-mode" role="tabpanel" style="display: none;">
+                <input type="radio" name="cameramode-group" value="persp" checked="checked" />Perspective
+                <br />
+                <br />
+                <input type="radio" name="cameramode-group" value="ortho" />Parallel
+            </div>
+        </div>
+    </div>
+    <div id="warning-view"></div>
+</body>
+
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Collada File Import</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/d3-threeD.js"></script>
+    <script type="text/javascript" src="js/ThreeCSG.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(0xeeeeee, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        scene.add(axes);
+
+        var grid = new THREE.GridHelper(80, 80);
+
+         // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -0.05;
+        plane.position.z = 0;
+        scene.add(plane);
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+        // Pathes are copied from ../SVG/assets/zhaw_logo.svg
+        // Each path has to be handled separately. No "Move" command in path allowed.
+        // The hole in the "a" is a separate path. Cut out with CSG subtract operation.
+        var svgPath1 = "m 28.475746,18.29188 c -0.6825,0 -1.34875,0.0925 -1.98251,0.27625 -2.4325,0.79375 -4.065,3.04125 -4.06875,5.59625 0,2.56 1.63125,4.81 4.05876,5.60375 0.64125,0.1875 1.30874,0.28 1.9925,0.28 0,0 15.315,0 16.20249,0 -0.61874,0.67375 -22.44125,24.4025 -22.44125,24.4025 -1.25874,1.3525 -1.895,3.1125 -1.895,5.23125 l 0.0125,0.28 c 0.12626,2.569996 2.11,5.411232 6.16625,5.588732 l 0.39751,0.009 32.29874,0 c 0.69376,0 1.37,-0.0963 2.01376,-0.28625 2.4175,-0.802496 4.03874,-3.048736 4.03874,-5.591232 0,-2.54875 -1.62375,-4.79625 -4.04124,-5.5925 l -0.0125,-0.002 c -0.64001,-0.19 -1.31376,-0.28375 -2.00376,-0.28375 0,0 -17.83999,0 -18.73,0 0.61376,-0.67275 22.02251,-24.144 22.02251,-24.144 1.42249,-1.52375 2.23999,-3.30375 2.23999,-4.88125 l -0.0212,-0.6125 c -0.0675,-1.06875 -0.315,-2.0275 -0.7375,-2.85 -0.66751,-1.30375 -1.76376,-2.235 -3.17001,-2.6925 -0.6775,-0.22 -1.42,-0.33125 -2.21249,-0.33125 l -30.1275,0";
+
+        var svgPath2 = "m 1.86624,81.79357 c 0,4.68875 -4.255,9.20375 -11.20125,9.20375 -4.34125,0 -7.03249,-2.345 -7.03249,-5.21125 0,-3.82 2.86374,-5.469992 8.16124,-6.248738 l 4.60125,-0.696248 c 1.47625,-0.261248 4.08126,-0.696246 5.47125,-1.99874 l 0,4.951226";
+
+        var svgPath3 = "m 14.25,10.26625 c -0.3775,-1.30125 -0.8525,-2.92125 -0.8525,-6.1 l 0,-21.27242 c 0,-8.864958 -7.56375,-13.746186 -21.29999,-13.746186 -12.88751,0 -20.83125,6.108722 -20.83125,11.968694 0,3.251236 2.63499,5.887474 5.88749,5.887474 1.41125,0 2.70626,-0.497498 3.72001,-1.324994 0.64624,-0.479998 1.24124,-1.052496 1.84625,-1.642494 1.95624,-1.90499 4.17499,-4.06373 9.28999,-4.06373 3.51375,0 7.2675,1.178744 7.2675,4.486228 0,2.888738 -1.62875,3.603734 -4.83,3.967482 l -7.72499,0.869996 c -9.07875,1.051246 -18.35501,3.697484 -18.35501,15.3037 0,8.55125 7.65126,13.66125 15.04875,13.66125 6.94875,0 12.32875,-2.1025 16.81876,-6.53 0.70375,4.21625 3.48874,6.53 8.01249,6.53 3.61875,0 6.455,-2.45375 6.455,-5.58625 0,-0.8625 -0.21,-1.57875 -0.4525,-2.40875";
+
+        var svgPath4 = "m 23.62876,-104.15482 -0.001,52.095 c 0.001,4.008746 3.26125,7.267482 7.26875,7.267482 3.95375,0 7.21251,-3.214986 7.26625,-7.167482 0,-0.004 0,-0.1 0,-0.1 l 0,-20.92375 c 0,-5.59375 4.52,-9.055 8.706264,-9.055 6.142482,0 7.058738,4.9125 7.058738,7.84 l 0,22.13875 0,0.12125 c 0.0637,3.938746 3.319992,7.144982 7.259992,7.146232 4.01125,0 7.2725,-3.261236 7.2725,-7.267482 l 0,-24.6575 c 0,-11.02125 -6.31875,-17.6 -16.904992,-17.6 -5.357504,0 -9.968752,1.8625 -13.396252,5.3625 0,-0.9175 0,-15.19875 0,-15.19875 l 0,-0.13 c -0.0712,-3.93625 -3.33,-7.13875 -7.265,-7.13875 -4.0075,0 -7.26749,3.26 -7.26749,7.2675";
+
+        var svgPath5 = "m 31.312498,67.628692 c 0,0.002 -0.23376,0.849996 -0.23376,0.849996 l -0.294988,1.272494 c 0,0 -4.762508,21.174902 -5.515004,24.514888 -0.18876,-0.876248 -4.761258,-21.998648 -4.761258,-21.998648 -0.20125,-0.901246 -0.477498,-2.071242 -0.824986,-3.158736 l -0.31376,-0.903746 c -1.328742,-3.202486 -4.422492,-5.269976 -7.887502,-5.269976 -3.31375,0 -6.35374,1.943742 -7.7475,4.954978 -0.24,0.627496 -0.45749,1.326244 -0.66249,2.14874 -0.19375,0.763746 -0.35876,1.543742 -0.50376,2.23249 0,0 -4.04,18.96116 -4.70499,22.082398 -0.20375,-0.852498 -5.92376,-24.622388 -5.92376,-24.622388 l -0.24625,-1.011244 c -0.15749,-0.622498 -0.3025,-1.116246 -0.45625,-1.556244 -1.09499,-2.562488 -3.59749,-4.22123 -6.37624,-4.22998 -2.0125,0.008 -3.93876,0.884996 -5.28501,2.40624 -0.98374,1.136244 -1.5625,2.526238 -1.67374,4.02123 0,0.003 -0.0125,0.30375 -0.0125,0.30375 0,0.411248 0.0175,0.814996 0.0587,1.228744 0.13876,1.443742 0.49876,2.592488 0.84625,3.702482 l 9.28751,30.21491 0.20125,0.64 0.47249,1.38625 c 1.42751,3.2725 4.65126,5.39625 8.21626,5.41375 l 0.0675,0.001 c 3.71,-0.01 6.99001,-2.2475 8.35375,-5.7 0,-0.007 0.42876,-1.5175 0.42876,-1.5175 0,-0.009 0.0737,-0.2875 0.0737,-0.2875 0,0 5.27751,-21.028702 5.46625,-21.786198 0.1925,0.771246 5.53751,22.067448 5.53751,22.067448 l 0.39374,1.40625 c 1.3175,3.47125 4.69125,5.80625 8.396254,5.8175 l 0.075,-0.001 c 3.488742,-0.0187 6.68373,-2.08125 8.14123,-5.255 0.19,-0.505 0.3775,-1.0525 0.575,-1.6825 l 0.15876,-0.50625 9.28999,-30.21116 c 0.3475,-1.116244 0.7075,-2.26874 0.84501,-3.702482 0.0388,-0.413748 0.0588,-0.817496 0.0588,-1.228744 l -0.0125,-0.30375 c -0.11124,-1.498742 -0.6925,-2.888736 -1.675,-4.02498 -1.35125,-1.519994 -3.275,-2.39499 -5.28249,-2.40249 -2.96001,0.009 -5.59375,1.897492 -6.557506,4.694978";
+
+        var mat = new THREE.MeshPhongMaterial({
+            specular: 0x221155,
+            color: 0x0066aa,
+            shininess: 100
+        });
+
+        // Create 3D geometry from SVG path description
+        function createGeom(svgPath) {
+            var shape = transformSVGPathExposed(svgPath);
+            var geom = new THREE.ExtrudeGeometry(shape, {
+                bevelEnabled: false,
+                amount: 10
+            });
+            return geom;
+        }
+
+        var geom1 = createGeom(svgPath1); // z
+        var mesh = new THREE.Mesh(geom1, mat);
+        mesh.position.x = -17.5;
+        mesh.position.y = 30.6;
+        mesh.scale.x = 0.25;
+        mesh.scale.y = 0.25;
+        mesh.rotation.x = Math.PI;
+        scene.add(mesh);
+
+        geom1 = createGeom(svgPath4); // h
+        mesh = new THREE.Mesh(geom1, mat);
+        mesh.position.x = -5;
+        mesh.position.y = 3;
+        mesh.scale.x = 0.25;
+        mesh.scale.y = 0.25;
+        mesh.rotation.x = Math.PI;
+        scene.add(mesh);
+
+        geom1 = createGeom(svgPath5); // w
+        mesh = new THREE.Mesh(geom1, mat);
+        mesh.position.x = 1.3;
+        mesh.position.y = 28.2;
+        mesh.scale.x = 0.25;
+        mesh.scale.y = 0.25;
+        mesh.rotation.x = Math.PI;
+        scene.add(mesh);
+
+        // CSG substract of hole in "a" character
+        geom1 = createGeom(svgPath3); // a without hole
+        mesh = new THREE.Mesh(geom1, mat);
+        mesh.position.x = 0;
+        mesh.position.y = 0;
+        mesh.rotation.x = Math.PI;
+
+        var geom2 = createGeom(svgPath2); // hole
+        var mesh2 = new THREE.Mesh(geom2, mat);
+        mesh2.position.x = -3.0;
+        mesh2.position.y = 82;
+        mesh2.position.z = 2;
+        mesh2.scale.z = 1.5
+        mesh2.rotation.x = Math.PI;
+
+        var bsp1 = new ThreeBSP(mesh); // Binary Space Partitioning
+        var bsp2 = new ThreeBSP(mesh2);
+        var subtract_bsp = bsp1.subtract(bsp2);
+        var result = subtract_bsp.toMesh(mat);
+		result.geometry.computeFaceNormals(); // recalc correct normals
+        result.position.x = -9.0;
+        result.position.y = 4.7;
+        result.scale.x = 0.25;
+        result.scale.y = 0.25;
+		scene.add(result);
+
+         // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+         // position and point the camera to the center of the scene
+        camera.position.x = -25;
+        camera.position.y = 45;
+        camera.position.z = 70;
+        camera.lookAt(scene.position);
+
+         // add subtle ambient lighting
+        var ambientLight = new THREE.AmbientLight(0x98ADC5, 0.40);
+        scene.add(ambientLight);
+
+         // add spotlight
+        var spotLight = new THREE.SpotLight(0xE8D6C1, 0.70);
+        spotLight.position.set(-80, 70, 90);
+        scene.add(spotLight);
+
+         // add headlight
+        var headLight = new THREE.PointLight(0xFFFFFF, 0.33);
+        headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+        scene.add(headLight);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = true;
+            this.showGrid = false;
+            this.showPlane = true;
+            this.asWireframes = false;
+            this.animated = true;
+            this.withShadow = false;
+            this.withFog = false;
+        }
+
+        var gui = new dat.GUI();
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showGrid').onChange(function (e) {
+            showGrid = e;
+            if (showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showPlane').onChange(function (e) {
+            showPlane = e;
+            if (showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+        /*
+        gui.add(guiControls, 'asWireframes').onChange(function (e) {
+            asWireframes = e;
+            // TODO: for all material.wireframe = asWireframes;
+            cubeMaterial.wireframe = asWireframes;
+            render();
+        });
+*/
+
+         // init and call render function
+        function render() {
+            headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+            renderer.render(scene, camera);
+        }
+        initAnim(false); // no gui
+        initShadow(false);
+        initFog(false);
+        render();
+        setShadow(false);
+        setFog(false);
+
+         // animate the 3D objects
+        function initAnim(value) {
+            if (value) {
+                gui.add(guiControls, 'animated').onChange(function (e) {
+                    animated = e;
+                    if (animated) animate();
+                });
+            }
+        }
+
+        var step = 0;
+        var scalingStep = 0;
+
+        function animate() {
+            if (guiControls.animated) {
+                // DO ANIMATING 3D ELEMENTS
+
+                // request re-rendering
+                requestAnimationFrame(animate);
+            }
+            render();
+        }
+
+         // shadow cast on plane
+        function initShadow(value) {
+            // SET receiveShadow AND castShadow FLAGS OF 3D ELEMENTS WITH SHADOW
+            plane.receiveShadow = value;
+            spotLight.castShadow = value;
+            spotLight.shadow.mapSize.width = 2048;
+            spotLight.shadow.mapSize.height = 2048;
+            renderer.shadowMap.enabled = value;
+            if (value) {
+                gui.add(guiControls, 'withShadow').onChange(function (e) {
+                    withShadow = e;
+                    setShadow(withShadow);
+                });
+            }
+        }
+
+        function setShadow(value) {
+            if (value) {
+                renderer.shadowMap.autoUpdate = true;
+            } else {
+                renderer.shadowMap.autoUpdate = false;
+                renderer.clearTarget(spotLight.shadow.map);
+            }
+            render();
+        }
+
+         // fog
+        var fog;
+
+        function initFog(value) {
+            if (value) {
+                fog = new THREE.Fog(0xeeeeee, 0.0000001, 150);
+                scene.fog = fog;
+                gui.add(guiControls, 'withFog').onChange(function (e) {
+                    withFog = e;
+                    setFog(withFog);
+                });
+            }
+        }
+
+        function setFog(value) {
+            if (!fog) return;
+            if (value) {
+                fog.near = 0.000000001;
+                fog.far = 150;
+            } else {
+                fog.near = 8000;
+                fog.far = 8000;
+            }
+            render();
+        }
+    </script>
+</body>
+
+</html>

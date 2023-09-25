@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Visual Computing Demos</title>
+    <style type="text/css">
+        body {
+            font-family: Sans-Serif;
+        }
+        .canton {
+            fill: #cccccc;
+        }
+        .canton-boundary {
+            fill: none;
+            stroke: #fff;
+            stroke-linejoin: round;
+        }
+        text {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 10px;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Map Sample</h1>
+    <b>The Cantons of Switzerland</b>
+    <br>
+    <script src="js/d3.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script>
+        var width = 720,
+            height = 480;
+
+        var projection = d3.geoAlbers()
+            .rotate([0, 0])
+            .center([8.3, 46.8])
+            .scale(12500)
+            .translate([width / 2, height / 2])
+            .precision(.1);
+
+        var path = d3.geoPath()
+            .projection(projection);
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        d3.json("assets/switzerland.json", function (error, swiss) {
+            var cantons = topojson.feature(swiss, swiss.objects.cantons);
+
+            svg.append("path")
+                .datum(cantons)
+                .attr("class", "canton")
+                .attr("d", path);
+
+            svg.append("path")
+                .datum(topojson.mesh(swiss, swiss.objects.cantons, function (a, b) {
+                    return a !== b;
+                }))
+                .attr("class", "canton-boundary")
+                .attr("d", path);
+
+            svg.selectAll("text")
+                .data(cantons.features)
+                .enter().append("text")
+                .attr("transform", function (d) {
+                    return "translate(" + path.centroid(d) + ")";
+                })
+                .attr("dy", ".35em")
+                .text(function (d) {
+                    return d.properties.name;
+                });
+        });
+    </script>
+    <br>
+    <br>Example of CGR Computer Graphics course at ZHAW.
+</body>
+
+</html>

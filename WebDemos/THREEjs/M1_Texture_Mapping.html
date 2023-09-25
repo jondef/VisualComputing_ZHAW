@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Texture Mapping</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<div id="webgl-container">
+</div>
+<div id="gui-container" style="position:absolute;z-index:1;top:0;left:0">
+</div>
+
+<body>
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+    <script type="text/javascript">
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(0xeeeeee, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        //scene.add(axes);
+
+        var grid = new THREE.GridHelper(80, 80);
+
+         // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -0.05;
+        plane.position.z = 0;
+        scene.add(plane);
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+
+         // create walls
+        var boxGeometry = new THREE.BoxGeometry(60, 30, 2);
+        var boxMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+        var box = new THREE.Mesh(boxGeometry, boxMaterial);
+        box.position.y = 15;
+        box.position.z = -30;
+        scene.add(box);
+
+        var box2 = new THREE.Mesh(boxGeometry, boxMaterial);
+        box2.position.y = 15;
+        box2.position.x = 30;
+        box2.rotation.y = Math.PI/2.0;
+        scene.add(box2);
+
+         // create art picture
+        new THREE.TextureLoader().load("assets/miro.jpg", function ( texture ) {
+            var imgMat = new THREE.MeshPhongMaterial( { color: 0xffffff, map: texture } );
+            var box3 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), imgMat);
+            box3.position.y = 15;
+            box3.position.x = 28.8;
+            box3.scale.x = 18;
+            box3.scale.y = 13;
+            box3.scale.z = 0.2;
+            box3.rotation.y = Math.PI/2.0;
+            scene.add(box3);
+            render();
+        });
+
+         // create table
+         new THREE.TextureLoader().load("assets/wood.jpg", function ( texture ) {
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(6, 4);
+            var woodMat = new THREE.MeshPhongMaterial( { color: 0xffffff, map: texture } );
+            var box4 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), woodMat);
+            box4.position.y = 8;
+            box4.position.z = -6;
+            box4.scale.x = 24;
+            box4.scale.y = 0.35;
+            box4.scale.z = 15;
+            scene.add(box4);
+            var legMat = new THREE.MeshPhongMaterial( { color: 0x000000 } );
+            var cylinder = new THREE.CylinderGeometry(0.3, 0.3, 8, 32);
+            var leg = new THREE.Mesh(cylinder, legMat);
+            leg.position.x = 10;
+            leg.position.y = 4;
+            scene.add(leg);
+            leg = new THREE.Mesh(cylinder, legMat);
+            leg.position.x = -10;
+            leg.position.y = 4;
+            scene.add(leg);
+            leg = new THREE.Mesh(cylinder, legMat);
+            leg.position.x = 10;
+            leg.position.y = 4;
+            leg.position.z = -12;
+            scene.add(leg);
+            leg = new THREE.Mesh(cylinder, legMat);
+            leg.position.x = -10;
+            leg.position.y = 4;
+            leg.position.z = -12;
+            scene.add(leg);
+            render();
+         });
+
+         // create sheet on table
+         new THREE.TextureLoader().load("assets/certificate.jpg", function ( texture ) {
+             var sheetMat = new THREE.MeshPhongMaterial( { color: 0xffffff, map: texture } );
+             var sheet = new THREE.Mesh(new THREE.PlaneGeometry (3.3, 5), sheetMat);
+             sheet.position.x = 4;
+             sheet.position.y = 8.42;
+             sheet.position.z = -4;
+             sheet.rotation.x = -Math.PI/2.0;
+             sheet.rotation.z = -0.4;
+             scene.add(sheet);
+             render();
+         });
+
+         // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+         // position and point the camera to the center of the scene
+        camera.position.x = -20;
+        camera.position.y = 18;
+        camera.position.z = 15;
+        camera.lookAt(new THREE.Vector3(0, 12, 0));
+
+         // add subtle ambient lighting
+        var ambientLight = new THREE.AmbientLight(0x222222);
+        scene.add(ambientLight);
+
+         // add spotlight
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(-80, 70, 90);
+        scene.add(spotLight);
+
+         // add headlight
+        var headLight = new THREE.PointLight(0x777777, 1.0);
+        headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+        scene.add(headLight);
+
+         // add GUI control elements
+        var guiControls = new function () {
+            this.showAxes = false;
+            this.showGrid = false;
+            this.showPlane = true;
+            this.asWireframes = false;
+            this.animated = false;
+            this.withShadow = false;
+            this.withFog = false;
+        }
+
+        var gui = new dat.GUI({
+            autoPlace: false
+        });
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+        gui.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showGrid').onChange(function (e) {
+            showGrid = e;
+            if (showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        gui.add(guiControls, 'showPlane').onChange(function (e) {
+            showPlane = e;
+            if (showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+        gui.close();
+
+         // init and call render function
+        function render() {
+            headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+            renderer.render(scene, camera);
+        }
+        initAnim(false);
+        initShadow(false);
+        initFog(false);
+        render();
+        setShadow(false);
+        setFog(false);
+        animate();
+
+         // animate the 3D objects
+        function initAnim(value) {
+            if (value) {
+                gui.add(guiControls, 'animated').onChange(function (e) {
+                    animated = e;
+                    if (animated) animate();
+                });
+            }
+        }
+
+        var step = 0;
+        var scalingStep = 0;
+
+        function animate() {
+            if (guiControls.animated) {
+                // DO ANIMATING 3D ELEMENTS
+
+                // request re-rendering
+                requestAnimationFrame(animate);
+            }
+            render();
+        }
+
+         // shadow cast on plane
+        function initShadow(value) {
+            // SET receiveShadow AND castShadow FLAGS OF 3D ELEMENTS WITH SHADOW
+            plane.receiveShadow = value;
+            spotLight.castShadow = value;
+            spotLight.shadow.mapSize.width = 2048;
+            spotLight.shadow.mapSize.height = 2048;
+            renderer.shadowMap.enabled = value;
+            if (value) {
+                gui.add(guiControls, 'withShadow').onChange(function (e) {
+                    withShadow = e;
+                    setShadow(withShadow);
+                });
+            }
+        }
+
+        function setShadow(value) {
+            if (value) {
+                renderer.shadowMap.autoUpdate = true;
+            } else {
+                renderer.shadowMap.autoUpdate = false;
+                renderer.clearTarget(spotLight.shadow.map);
+            }
+            render();
+        }
+
+         // fog
+        var fog;
+
+        function initFog(value) {
+            if (value) {
+                fog = new THREE.Fog(0xeeeeee, 0.0000001, 150);
+                scene.fog = fog;
+                gui.add(guiControls, 'withFog').onChange(function (e) {
+                    withFog = e;
+                    setFog(withFog);
+                });
+            }
+        }
+
+        function setFog(value) {
+            if (!fog) return;
+            if (value) {
+                fog.near = 0.000000001;
+                fog.far = 150;
+            } else {
+                fog.near = 8000;
+                fog.far = 8000;
+            }
+            render();
+        }
+    </script>
+</body>
+
+</html>
