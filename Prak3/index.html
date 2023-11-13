@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electric Vehicle Population Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <style>
+
+        @keyframes colorCycle {
+            0% { color: red; }
+            20% { color: orange; }
+            40% { color: yellow; }
+            60% { color: green; }
+            80% { color: blue; }
+            100% { color: violet; }
+        }
+
+        h1 {
+            animation: colorCycle 5s linear infinite;
+        }
+    </style>
+</head>
+<body>
+<h1>Electric Vehicle population visualization</h1>
+
+<script>
+    // Load data from CSV file
+    d3.csv('Electric_Vehicle_Population_Data.csv').then(data => {
+        // Group data by 'Model Year' and 'Electric Vehicle Type'
+        const groupedData = d3.rollups(
+            data,
+            v => v.length,
+            d => d['Model Year'],
+            d => d['Electric Vehicle Type']
+        );
+
+        // Get the unique model years and sort them
+        modelYears = Array.from(new Set(data.map(d => d['Model Year']))).sort((a, b) => a - b);
+
+        // Create scales for the axes and positions
+        const xScale = d3.scaleBand()
+                         .domain(modelYears)
+                         .range([50, 600])
+                         .padding(0.1);
+
+        // Find the maximum count to set the scale
+        const maxValue = d3.max(groupedData, ([, types]) => d3.max(types, ([, count]) => count));
+        const yScale = d3.scaleLinear()
+                         .domain([0, maxValue])
+                         .range([400, 0]);
+
+        const colorScale = d3.scaleOrdinal()
+                             .domain(['Battery Electric Vehicle (BEV)', 'Plug-in Hybrid Electric Vehicle (PHEV)'])
+                             .range(['blue', 'red']);
+
+        // Create SVG element
+        const svg = d3.select("body")
+                      .append("svg")
+                      .attr("width", 600)
+                      .attr("height", 450);
+
+        // Create bars
+        svg.append("g")
+           .selectAll("g")
+           .data(groupedData)
+           .enter()
+           .append("g")
+           .attr("transform", d => `translate(${xScale(d[0])},0)`)
+           .selectAll("rect")
+           .data(d => d[1])
+           .enter()
+           .append("rect")
+           .attr("x", d => d[0] === 'BEV' ? -10 : 10)
+           .attr("y", d => yScale(d[1]))
+           .attr("width", 20)
+           .attr("height", d => 400 - yScale(d[1]))
+           .attr("fill", d => colorScale(d[0]));
+
+        // Create axes
+        svg.append("g")
+           .attr("transform", "translate(50,0)")
+           .call(d3.axisLeft(yScale));
+
+        svg.append("g")
+           .attr("transform", "translate(0,400)")
+           .call(d3.axisBottom(xScale));
+
+        // Create legend
+        const legend = svg.append("g")
+                          .attr("transform", "translate(50,420)");
+
+        legend.selectAll("rect")
+               .data(colorScale.domain())
+               .enter()
+               .append("rect")
+               .attr("x", (d, i) => i * 250)
+               .attr("width", 20)
+               .attr("height", 20)
+               .attr("fill", colorScale);
+
+        legend.selectAll("text")
+               .data(colorScale.domain())
+               .enter()
+               .append("text")
+               .attr("x", (d, i) => i * 250 + 30)
+               .attr("y", 15)
+               .text(d => d);
+
+    }).catch(error => {
+        console.error(error);  // Log any errors to console
+    });
+</script>
+
+</body>
+</html>

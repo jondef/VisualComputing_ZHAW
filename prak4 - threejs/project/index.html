@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>My first three.js app</title>
+		<link rel="stylesheet" href="styles/style.css">
+	</head>
+	<body>
+		<h1>Gate Configurator</h1>
+		<div id="navigation">
+			Pick Color!
+			<input type="color" id="html5colorpicker" onchange="changeColor(event)" value="#ff0000" style="width:85%;" data-dashlane-rid="522ff871793f004c" data-form-type="">
+		</div>
+		<div id="webgl-container">
+
+		</div>
+		<div id="info">
+			KEY COMMANDS
+			<br>"T" translate
+			<br>"R" rotate
+			<br>"S" scale
+			<br>"+" increase handle
+			<br>"-" decrease handle
+			<br>"W" world/local space
+		</div>
+		<script src="node_modules/three/build/three.js"></script>
+		<script src="scripts/OrbitControls.js"></script>
+		<script src="scripts/WebGL.js"></script>
+		<script src="scripts/Projectors.js"></script>
+		<script src="scripts/TransformControls.js"></script>
+		<script src="node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+		<script src="scripts/dat.gui.js"></script>
+		<script src="scripts/sceneloader.js"></script>
+	</body>
+</html>

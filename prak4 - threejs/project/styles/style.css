@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+}
+
+#navigation {
+    position: absolute;
+    z-index: 1;
+    top: 80px;
+    left: 0;
+}
+
+#info {
+    position: absolute;
+    bottom: 0px;
+    left: 5px;
+    padding: 8px;
+    z-index: 2;
+    font-family: Monospace;
+}
